@@ -282,7 +282,7 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
           > - **Volume được khôi phục từ snapshot đã mã hóa**
           > **`Kết luận:`** AWS thực hiện việc mã hóa trên hạ tầng lưu trữ/host EC2 và quản lý khóa thông qua AWS KMS, AWS EBS encryption
           > **`Luồng có thể hiểu như sau:`** 
-              > 1) Ứng dụng ghi dữ liệu ->.  Hạ tầng AWS mã hóa -> Dữ liệu mã hóa được lưu trên EBS
+              > 1) Ứng dụng ghi dữ liệu -> Hạ tầng AWS mã hóa -> Dữ liệu mã hóa được lưu trên EBS
               > 2) Ứng dụng đọc dữ liệu -> Dữ liệu mã hóa trên EBS -> Hạ tầng AWS giải mã cho EC2 được cấp quyền -> Ứng dụng nhận dữ liệu
 
       > ***Quan trọng: Tại sao nên bật ngay từ đầu?***
@@ -344,18 +344,155 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
    - **Volume được tạo:** 16 GiB
    - **Dữ liệu thực tế:** 5 GiB
    - **Bạn vẫn trả phí cho volume 16 GiB**
-9. Advanced details:
+9. **`File systems`** hỏi bạn có muốn gắn thêm một hệ thống lưu trữ bên ngoài vào EC2 hay không ?
+
+  <span>- 1) Khi chọn <b style="font-size: 16px; text-decoration: underline;">None</b> AWS chỉ tạo **`EC2`**  với **`EBS root volume`** mà bạn đã cấu hình</span>
+  ```js
+  /
+  ├── home
+  ├── opt
+  ├── var
+  └── usr
+  ```
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Lưu ý quan trọng: Khi nào None không còn đủ?</b></p>
+  <ul>
+    <li>Có nhiều EC2 chạy đồng thời</li>
+    <li>Nhiều EC2 phải dùng chung file upload</li>
+    <li>Muốn file tồn tại ngay cả khi terminate EC2</li>
+    <li>Lưu lượng file upload rất lớn</li>
+    <li>Cần tách dữ liệu khỏi vòng đời server</li>
+    <li>Cần storage chuyên dụng cho Windows hoặc HPC</li>
+  </ul>
+
+  <hr/>
+
+  <span>- 2) Khi chọn <b style="font-size: 16px; text-decoration: underline;">S3 Files - new</b> thì lựa chọn này sử dụng <b>Mountpoint for Amazon S3</b> để hiển thị một S3 bucket dưới dạng thư mục trên Linux</span>
+  <span> Ở phía sau, Mountpoint chuyển thao tác file thành S3 API:</span>
+  ```js
+    1) Ứng dụng đọc /mnt/s3/example.json
+    2) Mountpoint chuyển thành S3 GetObject
+    3) Amazon S3 trả object về
+  ```
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Lưu ý quan trọng: Nó phù hợp với trường hợp nào?</b></p>
+  <ul>
+    <li>Dataset machine learning lớn</li>
+    <li>Data lake</li>
+    <li>File ảnh/video lớn cần đọc từ S3</li>
+    <li>ETL hoặc batch processing</li>
+    <li>Nhiều máy cần đọc cùng một tập object</li>
+    <li>Ứng dụng cũ yêu cầu đường dẫn file nhưng dữ liệu nằm trong S3</li>
+  </ul>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Lưu ý quan trọng: Nó không hoàn toàn giống ổ đĩa Linux. AWS nêu rõ Mountpoint hỗ trợ các thao tác file cơ bản nhưng có giới hạn:</b></p>
+  <ul>
+    <li>Có thể đọc và liệt kê object</li>
+    <li>Có thể tạo object mới</li>
+    <li>Không sửa trực tiếp nội dung object hiện có theo cách file system thông thường</li>
+    <li>Không hỗ trợ symbolic link</li>
+    <li>Không hỗ trợ file locking</li>
+    <li>Không xóa directory theo cách file system thông thường</li>
+  </ul>
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Vì vậy, không nên dùng nó để đặt:</b></p>
+  <ul>
+    <li>node_modules</li>
+    <li>MongoDB data</li>
+    <li>PostgreSQL data</li>
+    <li>Source code đang build</li>
+    <li>File lock</li>
+    <li>Database transaction files</li>
+  </ul>
+
+  <hr/>
+
+  <span>- 3) Khi chọn <b style="font-size: 16px; text-decoration: underline;">EFS</b> là viết tắt của **Elastic File System**. Đây là file system dùng qua mạng, hỗ trợ NFS cho Linux</span>
+  <span><b>Có thể hình dung EFS là một ổ đĩa dùng chung:</b></span>
+  ```js
+                   ┌── EC2 số 1
+  EFS dùng chung ──┼── EC2 số 2
+                   └── EC2 số 3
+  ```
+
+  <span><b>Cả ba EC2 có thể mount EFS tại: /mnt/shared</b> và nhìn thấy chung các file</span>
+  <span>AWS quản lý dung lượng, và EFS tự tăng hoặc giảm theo lượng dữ liệu. EFS hỗ trợ NFSv4 và có thể được sử dụng bởi EC2, ECS, EKS, Lambda và Fargate</span>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Trường hợp phù hợp để sử dụng:</b></p>
+  <ul>
+    <li>Nhiều EC2 cần dùng chung thư mục upload</li>
+    <li>Nhiều container cần truy cập cùng file</li>
+    <li>WordPress chạy trên nhiều EC2</li>
+    <li>Shared assets</li>
+    <li>Home directory dùng chung</li>
+    <li>Ứng dụng cần file locking và filesystem semantics thực sự</li>
+    <li>Auto Scaling tạo/xóa instance nhưng dữ liệu file phải giữ nguyên</li>
+  </ul>
+
+  <span><b>Ví dụ sau này hệ thống có hai EC2:</b></span>
+  ```js
+  Load Balancer
+  ├── EC2 NestJS A
+  └── EC2 NestJS B
+  ```
+  <span><b>Nếu người dùng upload file vào EBS của máy A thì máy B không nhìn thấy file đó. Khi ấy có thể dùng:</b></span>
+  ```js
+  EC2 A ─┐
+         ├── EFS shared uploads
+  EC2 B ─┘
+  ```
+  <span><b>Dù vậy, đối với ảnh/video người dùng upload, S3 thường là lựa chọn phù hợp hơn. EFS phù hợp khi ứng dụng thật sự cần filesystem semantics</b></span>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Yêu cầu network EFS cần:</b></p>
+  <ul>
+    <li>Mount target trong VPC</li>
+    <li>Security Group cho EFS</li>
+    <li>Inbound NFS port 2049 trên Security Group của EFS</li>
+    <li>Source nên là Security Group của EC2, không phải 0.0.0.0/0</li>
+    <li>EC2 phải có NFS client/EFS utility</li>
+  </ul>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Stop/Start và chi phí</b></p>
+  <span><b>EFS hoạt động độc lập với EC2. Do đó EFS vẫn có thể phát sinh chi phí khi EC2 đang tắt.</b></span>
+  <ul>
+    <li>EC2 Stopped</li>
+    <li>EFS vẫn tồn tại và vẫn lưu dữ liệu</li>
+  </ul>
+
+  <span><b>Với một server test duy nhất, thêm EFS sẽ:</b></span>
+  <ul>
+    <li>Tăng chi phí</li>
+    <li>Tăng cấu hình IAM/network</li>
+    <li>Thêm mount target và Security Group</li>
+    <li>Thêm một dependency mạng</li>
+    <li>Không mang lại lợi ích đáng kể hiện tại</li>
+  </ul>
+  
+  <hr/>
+
+  <span>- 4) Khi chọn <b style="font-size: 16px; text-decoration: underline;">FSx</b> **`Amazon FSx`** là nhóm dịch vụ file system được quản lý dành cho những workload chuyên biệt</span>
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">+ Tại sao hiện tại không chọn FSx?: FSx thường cần cấu hình:</b></p>
+  <ul>
+    <li>Dung lượng</li>
+    <li>Throughput</li>
+    <li>Network</li>
+    <li>Security Group</li>
+    <li>Backup</li>
+    <li>Directory Service đối với một số loại</li>
+    <li>Client tương ứng</li>
+    <li>Chi phí riêng trong thời gian file system tồn tại</li>
+  </ul>
+
+10. Advanced details:
    - IAM instance profile: `test-ec2-ssm-role`.
    - Metadata version: **V2 only / IMDSv2 required**.
    - Shutdown behavior: **Stop**.
    - Termination protection: có thể bật để tránh bấm nhầm trong giai đoạn thử nghiệm.
-10. Tags:
+11. Tags:
    - `Name = test-app-server`
    - `Environment = test`
    - `Project = <ten-du-an>`
    - `Owner = <ten-cua-ban>`
    - `AutoSchedule = 07-22-Asia-Ho_Chi_Minh`
-11. Chọn **Launch instance**.
+12. Chọn **Launch instance**.
 
 Ghi lại `INSTANCE_ID` sau khi máy được tạo.
 
