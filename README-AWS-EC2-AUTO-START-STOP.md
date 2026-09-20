@@ -580,7 +580,53 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
     <p><b style="padding-left: 10px">Hết CPU credit -> Tiếp tục dùng CPU cao -> Có thể phát sinh phí surplus CPU credits</b></p>
   </div>
 
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">AWS cảnh báo t3.micro mặc định có thể chạy Unlimited và phát sinh thêm phí nếu mức CPU trung bình vượt baseline đủ lâu</b></p>
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">AWS cảnh báo t3.micro mặc định có thể chạy Unlimited và phát sinh thêm phí nếu mức CPU trung bình vượt baseline đủ lâu</b>
+  </p>
+
+  - > **`EBS-optimized instance: Enable`**
+  1) ***Ý nghĩa***: **`EBS-optimized instance`** cung cấp đường truyền được tối ưu giữa EC2 và EBS
+
+  ```js
+  EC2 CPU/RAM
+      ↕ Dedicated EBS capacity
+  EBS volume
+  ```
+
+  <div style="background: #e1e2b6;">
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nó giúp giảm cạnh tranh giữa:</b>
+    <p><b style="padding-left: 10px">- Network traffic của ứng dụng</b></p>
+    <p><b style="padding-left: 10px">- Traffic đọc/ghi EBS</b></p>
+  </div>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Nhiều instance thế hệ hiện đại, bao gồm phần lớn dòng T3, đã hỗ trợ hoặc bật EBS optimization theo thiết kế</b>
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Bạn nên chọn gì ? => EBS-optimized instance: giữ mặc định</b>
+  </p>
+
+  - > **`Instance bandwidth configuration`**
+  <div style="background: #e1e2b6;">
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Một số instance type cho phép điều chỉnh tỷ lệ bandwidth dành cho:</b>
+    <ul>
+      <li>Network</li>
+      <li>EBS</li>
+    </ul>
+  </div>
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Ví dụ:</b></p>
+
+   ```js
+   Tăng network bandwidth
+          ↕
+   Giảm tỷ trọng EBS bandwidth
+   ```
+
+   <p style="background: yellow"><b style="color: red; font-size: 20px;">Hoặc</b></p>
+   
+   ```js
+   Tăng EBS bandwidth
+       ↕
+   Giảm tỷ trọng network bandwidth
+   ```
+
+   <p style="background: yellow"><b style="color: red; font-size: 20px;">Tính năng này chỉ xuất hiện hoặc hoạt động trên những instance type được hỗ trợ</b></p>
 
 11. Tags:
    - `Name = test-app-server`
