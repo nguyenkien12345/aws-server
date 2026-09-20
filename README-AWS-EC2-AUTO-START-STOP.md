@@ -563,19 +563,19 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
 
   <div style="background: #e1e2b6;">
     <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nếu chúng ta chọn <b style="color: red;">Standard</b>: Khi hết CPU credit, CPU bị giới hạn về baseline</b>
-    
+    <br/>
     <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Ưu điểm:</b>
     <ul>
       <li>Chi phí dễ dự đoán</li>
       <li>Không phát sinh surplus CPU credit charge</li>
     </ul>
-
+    <br/>
     <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Ưu điểm:</b>
     <ul>
       <li>Chi phí dễ dự đoán</li>
       <li>Không phát sinh surplus CPU credit charge</li>
     </ul>
-
+    <br/>
     <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nhược điểm:</b>
     <ul>
       <li>npm ci, npm run build hoặc tải cao kéo dài có thể bị chậm khi hết credit</li>
