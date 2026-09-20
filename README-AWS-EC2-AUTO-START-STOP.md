@@ -482,10 +482,113 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
   </ul>
 
 10. Advanced details:
-   - IAM instance profile: `test-ec2-ssm-role`.
-   - Metadata version: **V2 only / IMDSv2 required**.
-   - Shutdown behavior: **Stop**.
-   - Termination protection: có thể bật để tránh bấm nhầm trong giai đoạn thử nghiệm.
+  - IAM instance profile: `test-ec2-ssm-role`.
+
+  - Metadata version: **V2 only / IMDSv2 required**.
+
+  - >  **`Shutdown behavior: Stop`**
+      1) ***Ý nghĩa***: **`Shutdown behavior`** trường này quyết định EC2 làm gì khi hệ điều hành bên trong yêu cầu shutdown
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Có hai lựa chọn:</b></p>
+  <span style="padding-left: 20px; font-size: 16px; color: red;"><b>- 1) Stop: </b> EC2 chuyển sang: running → stopping → stopped => Instance và EBS vẫn còn. Bạn có thể Start lại.</span>
+  <br/>
+  <span style="padding-left: 20px; font-size: 16px; color: red;"><b>- 2) Terminate: </b> EC2 chuyển sang: running → shutting-down → terminated => Instance bị xóa vĩnh viễn. Root EBS cũng có thể bị xóa nếu Delete on termination = Yes</span>
+
+  <span style="padding-left: 20px; font-size: 16px; color: red;"><b>Lưu ý: EventBridge Scheduler gọi trực tiếp StopInstances, nên không phụ thuộc hoàn toàn vào thiết lập này. Thiết lập này áp dụng khi shutdown được khởi tạo từ hệ điều hành bên trong máy</b></span>
+
+  - > **`Stop - Hibernate behavior`**
+      1) ***Ý nghĩa***: **`Stop - Hibernate behavior`** Stop và Hibernate đều khiến EC2 ngừng tính compute, nhưng cách hoạt động khác nhau.
+
+    <div style="background: #e1e2b6;">
+      <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">1) Stop thông thường</b>
+      <p><b style="padding-left: 10px">- Ứng dụng nhận SIGTERM -> Ứng dụng dừng -> Hệ điều hành shutdown -> RAM bị xóa -> EBS vẫn còn</b></p>
+      <p><b style="padding-left: 10px">- Khi Start lại: Linux boot lại -> systemd chạy -> NestJS khởi động lại</b></p>
+    </div>
+
+    <div style="background: #e1e2b6;">
+      <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">2) Hibernate</b>
+      <p><b style="padding-left: 10px">- Nội dung RAM -> Ghi xuống EBS root volume -> EC2 stopped</b></p>
+      <p><b style="padding-left: 10px">- Khi Start: Đọc RAM từ EBS -> Khôi phục process cũ -> Tiếp tục gần trạng thái trước đó</b></p>
+    </div>
+
+    <p><b>Hibernate phù hợp với:</b></p>
+    <ul>
+      <li>Ứng dụng khởi động rất lâu.</li>
+      <li>Môi trường development có state phức tạp trong RAM.</li>
+      <li>Workload cần resume process cũ.</li>
+    </ul>
+
+    <p><b>Hibernate có các điều kiện:</b></p>
+    <ul>
+      <li>AMI và instance type phải hỗ trợ</li>
+      <li>Root volume phải được mã hóa</li>
+      <li>Root volume phải đủ chỗ chứa nội dung RAM</li>
+      <li>Chỉ bật được theo các điều kiện nhất định khi launch</li>
+      <li>Thời gian hibernate tối đa và cấu hình hệ điều hành phải phù hợp</li>
+    </ul>
+
+  - > **`Termination protection: Select`**: ngăn TerminateInstances vô tình xóa EC2
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Nó không ngăn:</b></p>
+  <ul>
+      <li>Stop</li>
+      <li>Reboot</li>
+      <li>Scheduler Stop lúc 22:00</li>
+      <li>AWS terminate trong một số sự kiện đặc biệt</li>
+      <li>Auto Scaling thay thế instance trong các trường hợp riêng</li>
+  </ul>
+
+  - > **`Stop protection: Select`** ngăn người dùng hoặc dịch vụ gọi StopInstances
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Bạn có thể bật Termination protection, nhưng phải tắt Stop protection</b></p>
+
+  - > **`Detailed CloudWatch monitoring`**
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">EC2 gửi metric cơ bản lên CloudWatch như:</b></p>
+  <ul>
+    <li>CPUUtilization</li>
+    <li>NetworkIn</li>
+    <li>NetworkOut</li>
+    <li>DiskReadOps</li>
+    <li>DiskWriteOps</li>
+    <li>StatusCheckFailed</li>
+  </ul>
+
+  - > **`Credit specification: Unlimited`**
+  1) ***Ý nghĩa***: **`Credit specification`** Trường này xuất hiện vì bạn dùng t3.micro. Dòng T là burstable performance instance. t3.micro không được thiết kế để sử dụng 100% CPU liên tục vô hạn trong mức giá cơ bản. Nó có baseline CPU và cơ chế CPU credit
+  <div style="background: #e1e2b6;">
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Có thể hiểu:</b>
+    <p><b style="padding-left: 10px">- CPU chạy thấp -> Tích lũy CPU credit</b></p>
+    <p><b style="padding-left: 10px">- CPU chạy cao -> Tiêu CPU credit</b></p>
+  </div>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">Một CPU credit tương ứng với khả năng sử dụng một vCPU ở 100% trong một khoảng thời gian được AWS quy định</b></p>
+
+  <div style="background: #e1e2b6;">
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nếu chúng ta chọn <b style="color: red;">Standard</b>: Khi hết CPU credit, CPU bị giới hạn về baseline</b>
+    
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Ưu điểm:</b>
+    <ul>
+      <li>Chi phí dễ dự đoán</li>
+      <li>Không phát sinh surplus CPU credit charge</li>
+    </ul>
+
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Ưu điểm:</b>
+    <ul>
+      <li>Chi phí dễ dự đoán</li>
+      <li>Không phát sinh surplus CPU credit charge</li>
+    </ul>
+
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nhược điểm:</b>
+    <ul>
+      <li>npm ci, npm run build hoặc tải cao kéo dài có thể bị chậm khi hết credit</li>
+    </ul>
+  </div>
+
+  <div style="background: #e1e2b6;">
+    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nếu chúng ta chọn <b style="color: red;">Unlimited</b>: Instance được phép burst tiếp sau khi hết credit</b>
+    <p><b style="padding-left: 10px">Hết CPU credit -> Tiếp tục dùng CPU cao -> Có thể phát sinh phí surplus CPU credits</b></p>
+  </div>
+
+  <p style="background: yellow"><b style="color: red; font-size: 20px;">AWS cảnh báo t3.micro mặc định có thể chạy Unlimited và phát sinh thêm phí nếu mức CPU trung bình vượt baseline đủ lâu</b></p>
+
 11. Tags:
    - `Name = test-app-server`
    - `Environment = test`
