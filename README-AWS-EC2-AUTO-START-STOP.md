@@ -750,6 +750,38 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
 
    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Đặc biệt, nếu Spot bị terminate và root EBS đang để Delete on termination = Yes, root volume cũng có thể bị xóa theo</p>
   </div>
+  <hr/>
+
+  - > #### <u>**`Tenancy`**</u> Tenancy quyết định EC2 chạy trên loại hạ tầng vật lý nào
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">1) Shared - run a shared hardware instance</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- EC2 của nhiều khách hàng có thể chạy trên cùng host vật lý, nhưng được cô lập bằng hệ thống ảo hóa AWS</span>
+    <span>- Đây là lựa chọn mặc định và tiết kiệm nhất</span>
+   </div>
+  </div>
+
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">2) Dedicated - run a dedicated instance</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Instance chạy trên phần cứng dành riêng cho một AWS account, nhưng bạn không kiểm soát host cụ thể</span>
+   </div>
+  </div>
+
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">3) Dedicated host - launch this instance on a dedicated Host</p>
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Bạn thuê cả host vật lý và có nhiều quyền kiểm soát hơn về</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Vị trí instance</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Socket/core</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bring Your Own License</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Compliance</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Phần mềm cấp phép theo host</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Dedicated Instance và Dedicated Host có thể tốn chi phí rất cao so với t3.micro</p>
+  </div>
+  <hr/>
 
 11. Tags:
    - `Name = test-app-server`
@@ -775,6 +807,10 @@ Tài liệu:
 - [Amazon EBS encryption](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-encryption.html)
 - [Configure Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html)
 - [Tag EC2 resources](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
+
+
+
+
 
 ## 11. Bước 6 — Kiểm tra Session Manager trước khi cài ứng dụng
 
