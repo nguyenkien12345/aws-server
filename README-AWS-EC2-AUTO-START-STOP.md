@@ -707,8 +707,8 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bạn phải có quyền truy cập vào một Interruptible Capacity Reservation đã tồn tại</li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Instance phải target đúng reservation đó</li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chủ sở hữu reservation có thể lấy lại capacity</li>
-    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload có checkpoint</li>
-    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload chịu được việc instance biến mất</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Khi bị lấy lại, instance consumer sẽ bị terminate, không tự động chuyển sang On-Demand hay Spot</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Consumer trả giá On-Demand cho instance thực tế sử dụng; đây không mặc nhiên là một lựa chọn giá rẻ như Spot</li>
    </ul>
 
    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">AWS thiết kế nó cho:</p>
