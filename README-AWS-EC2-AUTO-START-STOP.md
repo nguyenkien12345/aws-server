@@ -486,105 +486,115 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
 
   - Metadata version: **V2 only / IMDSv2 required**.
 
-  - >  **`Shutdown behavior: Stop`**
-      1) ***Ý nghĩa***: **`Shutdown behavior`** trường này quyết định EC2 làm gì khi hệ điều hành bên trong yêu cầu shutdown
+  - > #### <u>**`Shutdown behavior: Stop`**</u> Trường này quyết định EC2 làm gì khi hệ điều hành bên trong yêu cầu shutdown
 
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Có hai lựa chọn:</b></p>
-  <span style="padding-left: 20px; font-size: 16px; color: red;"><b>- 1) Stop: </b> EC2 chuyển sang: running → stopping → stopped => Instance và EBS vẫn còn. Bạn có thể Start lại.</span>
+  <p style="text-transform: uppercase; font-weight: bold; text-decoration: underline; color: #6E3511; background: #F5EBDD; width: fit-content; padding: 8px 12px;">Có hai lựa chọn:</p>
+  <span style="margin-left: 30px; font-size: 16px;"><b style="color: red;">- 1) Stop: </b> EC2 chuyển sang: running → stopping → stopped => Instance và EBS vẫn còn. Bạn có thể Start lại.</span>
   <br/>
-  <span style="padding-left: 20px; font-size: 16px; color: red;"><b>- 2) Terminate: </b> EC2 chuyển sang: running → shutting-down → terminated => Instance bị xóa vĩnh viễn. Root EBS cũng có thể bị xóa nếu Delete on termination = Yes</span>
+  <span style="margin-left: 30px; font-size: 16px;"><b style="color: red;">- 2) Terminate: </b> EC2 chuyển sang: running → shutting-down → terminated => Instance bị xóa vĩnh viễn. Root EBS cũng có thể bị xóa nếu Delete on termination = Yes</span>
+  <br/>
+  <span style="padding-left: 20px; font-size: 16px;"><b style="text-decoration: underline; color: red; background: yellow; padding: 2px 4px;">Lưu ý:</b> EventBridge Scheduler gọi trực tiếp StopInstances, nên không phụ thuộc hoàn toàn vào thiết lập này. Thiết lập này áp dụng khi shutdown được khởi tạo từ hệ điều hành bên trong máy</span>
+  <hr/>
 
-  <span style="padding-left: 20px; font-size: 16px; color: red;"><b>Lưu ý: EventBridge Scheduler gọi trực tiếp StopInstances, nên không phụ thuộc hoàn toàn vào thiết lập này. Thiết lập này áp dụng khi shutdown được khởi tạo từ hệ điều hành bên trong máy</b></span>
+  - > #### <u>**`Stop - Hibernate behavior`**</u> Stop và Hibernate đều khiến EC2 ngừng tính compute, nhưng cách hoạt động khác nhau
 
-  - > **`Stop - Hibernate behavior`**
-      1) ***Ý nghĩa***: **`Stop - Hibernate behavior`** Stop và Hibernate đều khiến EC2 ngừng tính compute, nhưng cách hoạt động khác nhau.
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">1) Stop thông thường</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Ứng dụng nhận SIGTERM -> Ứng dụng dừng -> Hệ điều hành shutdown -> RAM bị xóa -> EBS vẫn còn</span>
+    <span>- Khi Start lại: Linux boot lại -> systemd chạy -> NestJS khởi động lại</span>
+   </div>
+  </div>
 
-    <div style="background: #e1e2b6;">
-      <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">1) Stop thông thường</b>
-      <p><b style="padding-left: 10px">- Ứng dụng nhận SIGTERM -> Ứng dụng dừng -> Hệ điều hành shutdown -> RAM bị xóa -> EBS vẫn còn</b></p>
-      <p><b style="padding-left: 10px">- Khi Start lại: Linux boot lại -> systemd chạy -> NestJS khởi động lại</b></p>
-    </div>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">2) Hibernate</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Nội dung RAM -> Ghi xuống EBS root volume -> EC2 stopped</span>
+    <span>- Khi Start: Đọc RAM từ EBS -> Khôi phục process cũ -> Tiếp tục gần trạng thái trước đó</span>
+   </div>
+  </div>
 
-    <div style="background: #e1e2b6;">
-      <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">2) Hibernate</b>
-      <p><b style="padding-left: 10px">- Nội dung RAM -> Ghi xuống EBS root volume -> EC2 stopped</b></p>
-      <p><b style="padding-left: 10px">- Khi Start: Đọc RAM từ EBS -> Khôi phục process cũ -> Tiếp tục gần trạng thái trước đó</b></p>
-    </div>
-
-    <p><b>Hibernate phù hợp với:</b></p>
-    <ul>
-      <li>Ứng dụng khởi động rất lâu.</li>
-      <li>Môi trường development có state phức tạp trong RAM.</li>
-      <li>Workload cần resume process cũ.</li>
-    </ul>
-
-    <p><b>Hibernate có các điều kiện:</b></p>
-    <ul>
-      <li>AMI và instance type phải hỗ trợ</li>
-      <li>Root volume phải được mã hóa</li>
-      <li>Root volume phải đủ chỗ chứa nội dung RAM</li>
-      <li>Chỉ bật được theo các điều kiện nhất định khi launch</li>
-      <li>Thời gian hibernate tối đa và cấu hình hệ điều hành phải phù hợp</li>
-    </ul>
-
-  - > **`Termination protection: Select`**: ngăn TerminateInstances vô tình xóa EC2
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Nó không ngăn:</b></p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Hibernate phù hợp với:</p>
   <ul>
-      <li>Stop</li>
-      <li>Reboot</li>
-      <li>Scheduler Stop lúc 22:00</li>
-      <li>AWS terminate trong một số sự kiện đặc biệt</li>
-      <li>Auto Scaling thay thế instance trong các trường hợp riêng</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ứng dụng khởi động rất lâu.</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Môi trường development có state phức tạp trong RAM.</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload cần resume process cũ.</li>
   </ul>
 
-  - > **`Stop protection: Select`** ngăn người dùng hoặc dịch vụ gọi StopInstances
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Bạn có thể bật Termination protection, nhưng phải tắt Stop protection</b></p>
-
-  - > **`Detailed CloudWatch monitoring`**
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">EC2 gửi metric cơ bản lên CloudWatch như:</b></p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Hibernate có các điều kiện:</p>
   <ul>
-    <li>CPUUtilization</li>
-    <li>NetworkIn</li>
-    <li>NetworkOut</li>
-    <li>DiskReadOps</li>
-    <li>DiskWriteOps</li>
-    <li>StatusCheckFailed</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">AMI và instance type phải hỗ trợ</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Root volume phải được mã hóa</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Root volume phải đủ chỗ chứa nội dung RAM</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chỉ bật được theo các điều kiện nhất định khi launch</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Thời gian hibernate tối đa và cấu hình hệ điều hành phải phù hợp</li>
   </ul>
+  <hr/>
 
-  - > **`Credit specification: Unlimited`**
-  1) ***Ý nghĩa***: **`Credit specification`** Trường này xuất hiện vì bạn dùng t3.micro. Dòng T là burstable performance instance. t3.micro không được thiết kế để sử dụng 100% CPU liên tục vô hạn trong mức giá cơ bản. Nó có baseline CPU và cơ chế CPU credit
-  <div style="background: #e1e2b6;">
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Có thể hiểu:</b>
-    <p><b style="padding-left: 10px">- CPU chạy thấp -> Tích lũy CPU credit</b></p>
-    <p><b style="padding-left: 10px">- CPU chạy cao -> Tiêu CPU credit</b></p>
+  - > #### <u>**`Termination protection: Select`**</u> ngăn TerminateInstances vô tình xóa EC2
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Nó không ngăn:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Stop</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Reboot</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Scheduler Stop lúc 22:00</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">AWS terminate trong một số sự kiện đặc biệt</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Auto Scaling thay thế instance trong các trường hợp riêng</li>
+  </ul>
+  <hr/>
+
+  - > #### <u>**`Stop protection: Select`**</u> ngăn người dùng hoặc dịch vụ gọi StopInstances
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Bạn có thể bật Termination protection, nhưng phải tắt Stop protection</p>
+  <hr/>
+
+  - > #### <u>**`Detailed CloudWatch monitoring`**</u>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">EC2 gửi metric cơ bản lên CloudWatch như:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">CPUUtilization</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">NetworkIn</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">NetworkOut</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">DiskReadOps</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">DiskWriteOps</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">StatusCheckFailed</li>
+  </ul>
+  <hr/>
+
+  - > #### <u>**`Credit specification: Unlimited`**</u> Trường này xuất hiện vì bạn dùng t3.micro. Dòng T là burstable performance instance. t3.micro không được thiết kế để sử dụng 100% CPU liên tục vô hạn trong mức giá cơ bản. Nó có baseline CPU và cơ chế CPU credit
+
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Có thể hiểu:</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- CPU chạy thấp -> Tích lũy CPU credit</span>
+    <span>- CPU chạy cao -> Tiêu CPU credit</span>
+   </div>
   </div>
 
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Một CPU credit tương ứng với khả năng sử dụng một vCPU ở 100% trong một khoảng thời gian được AWS quy định</b></p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Một CPU credit tương ứng với khả năng sử dụng một vCPU ở 100% trong một khoảng thời gian được AWS quy định</p>
 
-  <div style="background: #e1e2b6;">
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nếu chúng ta chọn <b style="color: red;">Standard</b>: Khi hết CPU credit, CPU bị giới hạn về baseline</b>
-    <br/>
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Ưu điểm:</b>
-    <ul>
-      <li>Chi phí dễ dự đoán</li>
-      <li>Không phát sinh surplus CPU credit charge</li>
-    </ul>
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nhược điểm:</b>
-    <ul>
-      <li>npm ci, npm run build hoặc tải cao kéo dài có thể bị chậm khi hết credit</li>
-    </ul>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Nếu chúng ta chọn <b style="color: red;">Standard</b>: Khi hết CPU credit, CPU bị giới hạn về baseline</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span style="text-transform: uppercase; font-weight: bold">Ưu điểm:</span>
+    <span>- Chi phí dễ dự đoán</span>
+    <span>- Không phát sinh surplus CPU credit charge</span>
+   </div>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span style="text-transform: uppercase; font-weight: bold">Nhược điểm:</span>
+    <span>- npm ci, npm run build hoặc tải cao kéo dài có thể bị chậm khi hết credit</span>
+   </div>
   </div>
 
-  <div style="background: #e1e2b6;">
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nếu chúng ta chọn <b style="color: red;">Unlimited</b>: Instance được phép burst tiếp sau khi hết credit</b>
-    <p><b style="padding-left: 10px">Hết CPU credit -> Tiếp tục dùng CPU cao -> Có thể phát sinh phí surplus CPU credits</b></p>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Nếu chúng ta chọn <b style="color: red;">Unlimited</b>:  Instance được phép burst tiếp sau khi hết credit</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Hết CPU credit -> Tiếp tục dùng CPU cao -> Có thể phát sinh phí surplus CPU credits</span>
+   </div>
   </div>
 
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">AWS cảnh báo t3.micro mặc định có thể chạy Unlimited và phát sinh thêm phí nếu mức CPU trung bình vượt baseline đủ lâu</b>
-  </p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">AWS cảnh báo t3.micro mặc định có thể chạy Unlimited và phát sinh thêm phí nếu mức CPU trung bình vượt baseline đủ lâu</p>
+  <hr/>
 
-  - > **`EBS-optimized instance: Enable`**
-  1) ***Ý nghĩa***: **`EBS-optimized instance`** cung cấp đường truyền được tối ưu giữa EC2 và EBS
+  - > #### <u>**`EBS-optimized instance: Enable`**</u> cung cấp đường truyền được tối ưu giữa EC2 và EBS
 
   ```js
   EC2 CPU/RAM
@@ -592,25 +602,27 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
   EBS volume
   ```
 
-  <div style="background: #e1e2b6;">
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Nó giúp giảm cạnh tranh giữa:</b>
-    <p><b style="padding-left: 10px">- Network traffic của ứng dụng</b></p>
-    <p><b style="padding-left: 10px">- Traffic đọc/ghi EBS</b></p>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Nó giúp giảm cạnh tranh giữa:</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Network traffic của ứng dụng</span>
+    <span>- Traffic đọc/ghi EBS</span>
+   </div>
   </div>
 
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Nhiều instance thế hệ hiện đại, bao gồm phần lớn dòng T3, đã hỗ trợ hoặc bật EBS optimization theo thiết kế</b>
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Bạn nên chọn gì ? => EBS-optimized instance: giữ mặc định</b>
-  </p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Nhiều instance thế hệ hiện đại, bao gồm phần lớn dòng T3, đã hỗ trợ hoặc bật EBS optimization theo thiết kế</p>
+  <br/>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Bạn nên chọn gì ? => EBS-optimized instance: giữ mặc định</p>
+  <hr/>
 
-  - > **`Instance bandwidth configuration`**
-  <div style="background: #e1e2b6;">
-    <b style="font-size: 15px; color: #17ada0; text-transform: uppercase;">Một số instance type cho phép điều chỉnh tỷ lệ bandwidth dành cho:</b>
-    <ul>
-      <li>Network</li>
-      <li>EBS</li>
-    </ul>
-  </div>
-  <p style="background: yellow"><b style="color: red; font-size: 20px;">Ví dụ:</b></p>
+  - > #### <u>**`Instance bandwidth configuration`**</u>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Một số instance type cho phép điều chỉnh tỷ lệ bandwidth dành cho:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Network</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">EBS</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ví dụ:</p>
 
    ```js
    Tăng network bandwidth
@@ -618,7 +630,7 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
    Giảm tỷ trọng EBS bandwidth
    ```
 
-   <p style="background: yellow"><b style="color: red; font-size: 20px;">Hoặc</b></p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Hoặc</p>
    
    ```js
    Tăng EBS bandwidth
@@ -626,7 +638,7 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
    Giảm tỷ trọng network bandwidth
    ```
 
-   <p style="background: yellow"><b style="color: red; font-size: 20px;">Tính năng này chỉ xuất hiện hoặc hoạt động trên những instance type được hỗ trợ</b></p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Tính năng này chỉ xuất hiện hoặc hoạt động trên những instance type được hỗ trợ</p>
 
 11. Tags:
    - `Name = test-app-server`
