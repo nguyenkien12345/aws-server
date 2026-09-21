@@ -639,6 +639,117 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
    ```
 
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Tính năng này chỉ xuất hiện hoặc hoạt động trên những instance type được hỗ trợ</p>
+  <hr/>
+
+  - > #### <u>**`Purchasing option`**</u> Đây là cách mua compute capacity
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">1) None</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>Nếu không chọn purchasing option, instance mặc định được khởi chạy dưới dạng On-Demand Instance</span>
+   </div>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Bạn không cần:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Mua trước</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Cam kết 1 hoặc 3 năm</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Có sẵn Capacity Reservation</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Xử lý trường hợp AWS thu hồi máy như Spot</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">None cũng không làm mất quyền lợi Free Tier. Nếu instance và tài khoản đáp ứng điều kiện Free Tier, AWS sẽ tự áp dụng quyền lợi khi tính hóa đơn</p>
+  </div>
+
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">2) Capacity Blocks</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Đây không phải nút “đặt trước để được giảm giá” cho t3.micro</span>
+    <span>- Capacity Blocks hiện chủ yếu dành cho workload Machine Learning cần các loại máy accelerator đắt tiền như: p5, p6, p4d...</span>
+   </div>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Bạn mua trước một khối capacity:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Instance type xác định</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Số lượng xác định</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Region/AZ xác định</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Thời gian bắt đầu và kết thúc xác định</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Sau đó instance phải launch trực tiếp vào Capacity Block đã mua. Điểm cần chú ý:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Không thể tùy ý hủy Capacity Block đã mua</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Khi block hết hạn, AWS bắt đầu terminate các instance trong block</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Đây là giải pháp đảm bảo GPU/accelerator có sẵn cho một đợt training ML</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">t3.micro của bạn không thuộc nhóm instance được hỗ trợ</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Giao diện Launch instance hiển thị lựa chọn chung, nhưng điều đó không có nghĩa instance type đang chọn có thể sử dụng lựa chọn ấy</p>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Kết luận: không chọn cho NestJS/test server</p>
+  </div>
+
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">3) Interruptible Capacity Reservations</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Đây là tính năng khác hẳn Spot</span>
+   </div>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ví dụ một công ty có đội A đã mua On-Demand Capacity Reservation để giữ sẵn 100 máy cho hệ thống quan trọng. Ban đêm đội A chỉ dùng 40 máy, còn dư 60 máy. Đội A có thể:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">1) Chuyển 60 capacity đang dư thành Interruptible Capacity Reservation</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">2) Chia sẻ capacity đó cho đội B hoặc tài khoản AWS khác trong cùng organization</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">3) Đội B chạy batch job trên phần capacity dư</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">4) Khi đội A cần lại capacity, đội A thực hiện reclaim</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">5) Instance của đội B nhận cảnh báo và sau đó bị terminate</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Một số đặc điểm quan trọng:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bạn phải có quyền truy cập vào một Interruptible Capacity Reservation đã tồn tại</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Instance phải target đúng reservation đó</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chủ sở hữu reservation có thể lấy lại capacity</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload có checkpoint</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload chịu được việc instance biến mất</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">AWS thiết kế nó cho:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Batch processing</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Data analytics</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">ML training</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload có checkpoint</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Workload chịu được việc instance biến mất</li>
+   </ul>
+  </div>
+
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">4) Spot instances</p>
+   <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span>- Spot sử dụng capacity EC2 đang dư nên thường rẻ hơn On-Demand</span>
+    <span>- Đổi lại, AWS có thể: Stop instance, Hibernate instance, Terminate instance</span>
+    <span>- AWS thường phát cảnh báo khoảng hai phút trước khi interrupt. Tuy nhiên ứng dụng phải được thiết kế để chịu lỗi và lưu dữ liệu ra khỏi máy kịp thời</span>
+   </div>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Spot hợp với:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">CI/CD runner</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Batch job</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Render</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Worker đọc job từ queue</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Job có checkpoint</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Auto Scaling có nhiều instance type thay thế</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Spot chưa hợp với server test hiện tại của bạn nếu:</p>
+   <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bạn muốn 07:00 máy chắc chắn chạy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">NestJS, database hoặc dữ liệu cục bộ nằm chung trên một máy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bạn chưa cấu hình tự phục hồi</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bạn chưa xử lý interruption notice</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bạn đang học quy trình EC2 cơ bản</li>
+   </ul>
+
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Đặc biệt, nếu Spot bị terminate và root EBS đang để Delete on termination = Yes, root volume cũng có thể bị xóa theo</p>
+  </div>
 
 11. Tags:
    - `Name = test-app-server`
