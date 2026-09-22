@@ -783,6 +783,27 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
   </div>
   <hr/>
 
+  - > #### <u>**`Placement group`**</u> Kiểm soát cách nhiều EC2 được bố trí trên hạ tầng vật lý
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+   <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Các chiến lược thường gặp:</p>
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">1) Cluster: Đặt các instance gần nhau để có network latency thấp và throughput cao. Phù hợp HPC hoặc distributed computing</p>
+   <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; padding-top: 0px; padding-bottom: 0px;">
+      Rack/host gần nhau
+      ├── EC2 A
+      ├── EC2 B
+      └── EC2 C
+   </pre>
+   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">2) Spread: Tách các instance quan trọng lên phần cứng khác nhau để giảm khả năng cùng lỗi</p>
+   <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; padding-top: 0px; padding-bottom: 0px;">
+      Rack 1: EC2 A
+      Rack 2: EC2 B
+      Rack 3: EC2 C
+   </pre>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">3) Partition: Chia một cụm lớn thành nhiều partition phần cứng, phù hợp hệ thống phân tán như Hadoop, Cassandra hoặc Kafka</p>
+  </div>
+  <hr/>
+  
+
 11. Tags:
    - `Name = test-app-server`
    - `Environment = test`
@@ -807,6 +828,10 @@ Tài liệu:
 - [Amazon EBS encryption](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-encryption.html)
 - [Configure Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html)
 - [Tag EC2 resources](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
+
+
+
+
 
 
 
