@@ -802,7 +802,42 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
     <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">3) Partition: Chia một cụm lớn thành nhiều partition phần cứng, phù hợp hệ thống phân tán như Hadoop, Cassandra hoặc Kafka</p>
   </div>
   <hr/>
-  
+
+  - > #### <u>**`RAM disk ID`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="text-transform: uppercase; font-weight: bold; text-decoration: underline; color: #6E3511; background: #F5EBDD; width: fit-content; padding: 8px 12px;">RAM disk là image chứa thành phần initrd/initramfs hỗ trợ kernel khởi động</p>
+    <span style="margin-left: 30px; font-size: 16px;">- Trường này chỉ áp dụng cho các AMI paravirtual rất cũ</span>
+    <span style="margin-left: 30px; font-size: 16px;">- Amazon Linux 2023 và instance hiện đại sử dụng HVM/Nitro, không cần chọn RAM disk riêng</span>
+  </div>
+  <hr/>
+
+  - > #### <u>**`Kernel ID`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="text-transform: uppercase; font-weight: bold; text-decoration: underline; color: #6E3511; background: #F5EBDD; width: fit-content; padding: 8px 12px;">Kernel ID cho phép chọn kernel riêng cho AMI paravirtual cũ</p>
+    <span style="margin-left: 30px; font-size: 16px;">- Amazon Linux 2023 đã bao gồm kernel thích hợp trong AMI/root volume</span>
+    <span style="margin-left: 30px; font-size: 16px;">- Hai trường RAM disk và Kernel phần lớn chỉ tồn tại vì tương thích với kiến trúc EC2 cũ</span>
+  </div>
+  <hr/>
+
+  - > #### <u>**`Nitro Enclave`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Tạo một môi trường cô lập đặc biệt bên trong EC2</p>
+    <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; padding-top: 0px; padding-bottom: 0px;">
+        EC2 parent instance
+        ├── Ứng dụng bình thường
+        └── Nitro Enclave
+            └── Xử lý dữ liệu cực kỳ nhạy cảm
+    </pre>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Không có network trực tiếp thông thường</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Không có persistent storage thông thường</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bị cô lập khỏi parent instance</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Có thể dùng attestation</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Phù hợp xử lý private key, dữ liệu tài chính hoặc thông tin nhạy cảm đặc biệt</li>
+    </ul>
+    <span style="margin-left: 30px; font-size: 16px;">Khi bật, một phần CPU và RAM của instance được dành cho enclave</span>
+  </div>
+  <hr/>
 
 11. Tags:
    - `Name = test-app-server`
@@ -828,14 +863,6 @@ Tài liệu:
 - [Amazon EBS encryption](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-encryption.html)
 - [Configure Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-options.html)
 - [Tag EC2 resources](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
-
-
-
-
-
-
-
-
 
 ## 11. Bước 6 — Kiểm tra Session Manager trước khi cài ứng dụng
 
