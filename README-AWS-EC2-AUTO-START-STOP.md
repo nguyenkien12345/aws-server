@@ -895,6 +895,85 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
   </div>
   <hr/>
 
+  - > #### <u>**`Allow tags in metadata`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Khi bật, phần mềm trên EC2 có thể đọc tag của chính instance qua IMDS. Ví dụ tag:</p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Environment=test</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Project=my-api</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Owner=kien</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Ứng dụng có thể sử dụng tag để tự xác định môi trường</p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nhưng tag có thể chứa thông tin vận hành như:</p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Tên dự án</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Tên team</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Environment</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Cost center</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Owner</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Cấu trúc hệ thống</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Tag không nên chứa secret trong bất kỳ trường hợp nào</p>
+  </div>
+  <hr/>
+
+   - > #### <u>**`User data`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">User data là script hoặc cloud-init configuration được EC2 chạy khi khởi tạo máy</p>
+    <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; padding-top: 0px; padding-bottom: 0px;">
+      #!/bin/bash
+      dnf update -y
+      dnf install -y nginx
+      systemctl enable --now nginx
+    </pre>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      Luồng: EC2 boot lần đầu -> cloud-init đọc user data -> Script chạy với quyền root -> Cài đặt và cấu hình máy
+    </p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      User data phù hợp để làm gì?
+    </p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Cài package</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Tạo directory</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Cấu hình systemd</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Cài SSM/CloudWatch Agent</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Download deployment artifact</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bootstrap instance</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Đăng ký máy với hệ thống quản lý</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      Không được đặt gì vào User data? Không nên đặt trực tiếp:
+    </p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Database password</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">JWT secret</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">AWS access key</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">GitHub token</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Private key</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">API key</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      User data có thể xuất hiện trong:
+    </p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">EC2 configuration</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Instance metadata tùy quyền/cấu hình</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Cloud-init logs</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Infrastructure configuration</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Audit trail hoặc launch template</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      Ngoài ra, script thường chạy bằng root, nên lỗi trong script có tác động lớn
+    </p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      User data chạy mấy lần ? => Trên Linux, user data/cloud-init mặc định thường chạy ở lần boot đầu tiên. Muốn chạy lại mỗi lần boot cần cấu hình cloud-init khác hoặc dùng systemd
+    </p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+      Việc tự khởi động NestJS mỗi sáng nên dùng: systemd service. Không nên dựa vào user data mỗi lần Start.
+    </p>
+  </div>
+  <hr/>
+
 11. Tags:
    - `Name = test-app-server`
    - `Environment = test`
