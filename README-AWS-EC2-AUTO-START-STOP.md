@@ -839,6 +839,62 @@ Tài liệu: [Security group rules](https://docs.aws.amazon.com/AWSEC2/latest/Us
   </div>
   <hr/>
 
+  - > #### <u>**`License configurations`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Tính năng này tích hợp với AWS License Manager để theo dõi license phần mềm. Ví dụ:</p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Microsoft SQL Server</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Oracle Database</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">SAP</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Phần mềm thương mại tính license theo CPU/socket/host</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nó giúp doanh nghiệp kiểm soát</p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Số license đã mua</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Số instance đang sử dụng</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Ngăn vượt license</li>
+    </ul>
+  </div>
+  <hr/>
+
+  - > #### <u>**`Metadata accessible: Enabled`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">EC2 Instance Metadata Service, gọi tắt IMDS, cung cấp thông tin cho phần mềm chạy trong instance. Endpoint IPv4 đặc biệt: http://169.254.169.254</p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Metadata có thể cung cấp:</p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Instance ID</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Region</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Availability Zone</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Network information</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">IAM role credentials</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Một số thông tin instance khác</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">SSM Agent cần lấy temporary credentials của instance role. Nếu tắt metadata access, role có thể được gắn vào EC2 nhưng phần mềm trong máy không lấy được credential như kỳ vọng. Bật IMDS nhưng bắt buộc sử dụng phiên bản 2 ở trường tiếp theo</p>
+  </div>
+  <hr/>
+
+  - > #### <u>**`Metadata IPv6 endpoint`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Ngoài IPv4 endpoint: 169.254.169.254 thì IMDS còn có IPv6 endpoint: fd00:ec2::254. Nó chỉ hữu ích khi:</p>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Instance dựa trên Nitro</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Subnet hỗ trợ IPv6</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ứng dụng cần truy cập IMDS qua IPv6</li>
+    </ul>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Bạn đang dùng cấu hình IPv4 thông thường. Không cần mở thêm endpoint IPv6</p>
+  </div>
+  <hr/>
+
+  - > #### <u>**`Metadata version`**</u>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Đây là thiết lập bảo mật rất quan trọng</p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">IMDSv1: Ứng dụng chỉ cần gửi request: curl http://169.254.169.254/latest/meta-data/. Không yêu cầu session token. Nếu ứng dụng có lỗ hổng SSRF, attacker có thể tìm cách khiến server gọi metadata endpoint và lấy credential</p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">IMDSv2: Trước khi đọc metadata, client phải yêu cầu token: Request token -> Nhận token có thời hạn -> Dùng token gọi metadata. Cơ chế token làm giảm nhiều kịch bản khai thác metadata qua SSRF và proxy không phù hợp</p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Bạn nên chọn gì? Metadata version: V2 only (token required)</p>
+    <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Amazon Linux 2023 và SSM Agent hiện đại hỗ trợ IMDSv2</p>
+  </div>
+  <hr/>
+
 11. Tags:
    - `Name = test-app-server`
    - `Environment = test`
