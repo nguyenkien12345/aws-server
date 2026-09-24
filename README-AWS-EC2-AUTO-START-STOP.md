@@ -131,8 +131,215 @@ Tài liệu: [Getting started with IAM Identity Center](https://docs.aws.amazon.
 
 ## 7. Bước 2 — Tạo cảnh báo chi phí trước khi tạo server
 
+<p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">
+  Tại mục Choose budget type. Bạn có hai cách tạo budget
+</p>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">1) Use a template (simplified)</p>
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">AWS cung cấp sẵn một số cấu hình được khuyến nghị:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Loại budget</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chu kỳ budget</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Phạm vi theo dõi</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Các ngưỡng cảnh báo</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Loại cảnh báo actual/forecasted</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ưu điểm:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Tạo nhanh trên một màn hình</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ít nguy cơ cấu hình sai</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Phù hợp với người mới dùng AWS</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Có thể chỉnh sửa nhiều cấu hình sau khi tạo</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Nhược điểm:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Mặc định theo dõi toàn bộ AWS Services</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Không thuận tiện nếu muốn chỉ theo dõi một project, service, tag hoặc AWS account cụ thể</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Các ngưỡng cảnh báo đã được AWS thiết lập sẵn</li>
+  </ul>
+  <p style="font-size: 16px; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">AWS mô tả template là quy trình đơn giản một trang, trong khi custom budget sử dụng quy trình nâng cao nhiều bước</p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Có tổng cộng 4 template</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">1) Zero spend budget</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span><b style="text-decoration: underline;">Định nghĩa:</b> Template này dành cho mục tiêu: Tôi muốn được cảnh báo ngay khi AWS bắt đầu phát sinh bất kỳ chi phí nào</span>
+    <span>
+    - Ngưỡng mặc định thường là: Actual spend > $0.01
+    <pre style="white-space: pre-wrap; font-family: monospace; margin: 0px; padding: 0px;">
+      Ví dụ:
+      • Chi phí hiện tại: $0
+      • EBS bắt đầu phát sinh $0.02
+      • Khi dữ liệu billing được cập nhật, AWS gửi cảnh báo
+    </pre>
+    </span>
+    <p style="font-size: 16px; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Vì dữ liệu AWS Budgets không cập nhật theo thời gian thực. AWS cho biết dữ liệu billing dùng bởi Budgets được cập nhật ít nhất một lần mỗi ngày; vì vậy email có thể đến sau khi tiền đã phát sinh</p>
+  </div>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">2) Monthly cost budget</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span><b style="text-decoration: underline;">Định nghĩa:</b> Tổng chi phí AWS trong tháng này đã hoặc có khả năng vượt mức tôi cho phép chưa?</span>
+    <span>- Ví dụ bạn nhập: Budget amount = 100$. <b>AWS sẽ so sánh tổng chi phí tháng hiện tại với 100 đô</b></span>
+    <span>- AWS xác nhận Monthly cost budget dùng để cảnh báo khi chi phí đã vượt hoặc được dự báo sẽ vượt budget</span>
+  </div>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">1) Actual spending đạt 85%</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">2) Actual spending đạt 100%</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">3) Forecasted spending dự kiến đạt 100%</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ví dụ với budget $100</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual 85% => Đã tiêu $85 => Sắp chạm ngân sách</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual 100% => Đã tiêu $100 => Đã đạt hoặc vượt ngân sách</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Forecasted 100% => AWS dự đoán cuối tháng ≥ $100 => Chưa tiêu $100, nhưng có khả năng sẽ vượt</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Forecasted hoạt động như thế nào?</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px; padding-right: 20px; background: #FFF9F2;">
+    <span style="font-weight: bold; text-transform: uppercase;">AWS dựa trên lịch sử sử dụng để dự đoán chi phí cuối tháng</span>
+    <span>- Ví dụ: Ngày 10: Actual cost = 45 đô</span>
+    <span>- Nếu tốc độ sử dụng tiếp tục như vậy, AWS có thể dự báo: End-of-month forecast = 135 đô</span>
+    <span>- Khi đó cảnh báo forecasted 100% có thể được gửi ngay, dù actual cost mới chỉ $45. Forecast chỉ là dự đoán, không phải hóa đơn chính thức. Với account mới hoặc chưa đủ lịch sử, AWS có thể chưa tạo được forecast. Tài liệu best practice cho biết Budget Forecast thường cần khoảng năm tuần dữ liệu sử dụng</span>
+  </div>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">3) Daily Savings Plans coverage budget</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+     <span><b style="text-decoration: underline;">Định nghĩa:</b> Option này không dành cho Free Tier và cũng không cần thiết chỉ vì bạn dùng EC2. Nó chỉ hữu ích khi tài khoản đã mua AWS Savings Plans</span>
+  </div>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Savings Plans là gì?</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span><b style="text-decoration: underline;">Định nghĩa:</b> Bạn cam kết mức chi tiêu compute theo giờ trong một hoặc ba năm, đổi lại nhận giá thấp hơn On-Demand</span>
+    <span>
+      Ví dụ: <br/>
+      - Cam kết: $1 compute mỗi giờ <br/>
+      - Thời hạn: 1 năm
+    </span>
+  </div>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Coverage là gì?</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span><b style="text-decoration: underline;">Định nghĩa:</b> Coverage đo phần trăm compute usage đủ điều kiện đang được Savings Plans bao phủ</span>
+    <span>
+      Ví dụ:<br/>
+      - Tổng compute usage đủ điều kiện: 100 đô <br/>
+      - Được Savings Plans bao phủ:     80 đô <br/>
+      - Coverage = 80%
+    </span>
+    <span>Nếu coverage giảm, nghĩa là có nhiều compute usage đang phải trả theo giá On-Demand hơn dự kiến</span>
+    <span>Budget này sẽ kiểm tra hằng ngày và cảnh báo khi coverage thấp hơn target</span>
+  </div>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Phân biệt coverage và utilization</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="background: #EEEEEE">Coverage</b>: bao nhiêu phần trăm usage được Savings Plans bảo vệ bằng mức giá cam kết</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="background: #EEEEEE">Utilization</b>: bạn đã sử dụng được bao nhiêu phần trăm khoản cam kết đã mua</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">4) Daily reservation utilization budget</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+     <span><b style="text-decoration: underline;">Định nghĩa:</b> Option này dành cho tài khoản đã mua Reserved Instances, không phải EC2 On-Demand thông thường</span>
+  </div>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Reservation utilization nghĩa là gì?</p>
+  <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 20px;">
+    <span><b style="text-decoration: underline;">Định nghĩa:</b> Nó đo xem phần cam kết Reserved Instance mà bạn đã mua có đang được sử dụng hay không</span>
+    <span>
+        Ví dụ:<br/>
+        - Bạn đã mua quyền lợi RI tương đương 24 giờ/ngày <br/>
+        - Workload phù hợp chỉ chạy 12 giờ/ngày <br/>
+        - Reservation utilization ≈ 50%
+    </span>
+    <span>- AWS sẽ cảnh báo vì bạn đang trả tiền/cam kết cho capacity hoặc billing benefit nhưng không tận dụng hết</span>
+  </div>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Không phải CPU utilization</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Reservation utilization hoàn toàn không phải:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">CPU đang dùng bao nhiêu phần trăm</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">RAM đang dùng bao nhiêu</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ổ đĩa đang dùng bao nhiêu</li>
+  </ul>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Đây là mức tận dụng cam kết mua Reserved Instance, không phải hiệu năng bên trong server</p>
+</div>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">2) Customize (advanced)</p>
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Lựa chọn này cho phép tự cấu hình gần như toàn bộ budget</p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Bạn có thể chọn một trong bốn nhóm budget chính:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">1) Cost budget - Recommended: theo dõi tiền</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">2) Usage budget: theo dõi số lượng tài nguyên sử dụng, chẳng hạn EC2 instance hours</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">3) Savings Plans budget: theo dõi coverage/utilization của Savings Plans</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">4) Reservation budget: theo dõi coverage/utilization của Reserved Instances</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ngoài ra còn có thể chỉnh:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chu kỳ ngày, tháng, quý, năm hoặc custom</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ngày bắt đầu và kết thúc</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Fixed budget hoặc budget thay đổi theo kế hoạch</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual cost hoặc forecasted cost</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Loại chi phí: unblended, amortized…</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Có tính refund, credit, tax, support fee hay không</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Lọc theo AWS service</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Lọc theo Region</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Lọc theo Availability Zone</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Lọc theo linked account</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Lọc theo cost allocation tag</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Tạo nhiều ngưỡng cảnh báo</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Gửi cảnh báo qua email hoặc SNS</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Gắn Budget Actions</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Khi nào cần dùng?</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+    <span style="display: inline-block">Nên dùng Advanced nếu AWS account có nhiều project hoặc nhiều người sử dụng</span>
+    <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+      Tag:
+      Project = nestjs-test
+    </pre>
+  </p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+    <span style="display: inline-block">Lúc đó mọi tài nguyên của project cần được gắn tag nhất quán, ví dụ:</span>
+    <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+      Name        = nestjs-test-server
+      Project     = nestjs-test
+      Environment = development
+      Owner       = kien
+      ManagedBy   = manual
+    </pre>
+  </p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Cost allocation tag còn phải được kích hoạt trong Billing trước khi có thể dùng ổn định để phân bổ chi phí</p>
+</div>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Billing View - optional</p>
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Billing View xác định tập dữ liệu chi phí mà budget được phép theo dõi. Nó không phải là Region và cũng không liên quan đến giao diện hiển thị sáng/tối.</p>
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;"><b style="color: red;">Primary view:</b> Nếu bạn không chọn Billing View, AWS dùng Primary view:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Theo dõi dữ liệu của AWS account hiện tại</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Có thể bao gồm mọi Region</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Có thể bao gồm mọi service</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Với management account trong AWS Organizations, phạm vi có thể lớn hơn tùy cấu hình billing</li>
+  </ul>
+
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;"><b style="color: red;">Custom Billing View:</b> Trong tổ chức lớn, admin có thể tạo view đã lọc, chẳng hạn:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chỉ phòng Backend</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chỉ project A</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chỉ một số linked accounts</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Chỉ một nhóm cost center</li>
+  </ul>
+
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;">Khi tạo budget bằng custom billing view, budget chỉ nhìn thấy chi phí nằm trong view đó</p>
+  <p style="font-size: 16px; text-decoration: underline; color: #757D6F; background: #EEEAD7; padding: 6px; width: fit-content; margin-bottom: 0;"><b style="color: red;">Cảnh báo trong giao diện:</b> Billing View không thể sửa sau khi tạo budget. Vì vậy, nếu chọn nhầm view thì thường phải tạo budget khác.</p>
+</div>
+
 1. Mở [AWS Billing and Cost Management](https://console.aws.amazon.com/billing/home).
-2. Vào **Budgets** → **Create budget**.
+2. Vào **Budgets and Planning -> Budgets** -> **Create budget**.
 3. Chọn **Cost budget**.
 4. Chọn chu kỳ **Monthly**.
 5. Đặt ngân sách phù hợp, ví dụ `10 USD` hoặc `20 USD`.
