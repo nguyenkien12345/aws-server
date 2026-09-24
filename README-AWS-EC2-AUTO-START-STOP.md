@@ -190,11 +190,11 @@ Tài liệu: [Getting started with IAM Identity Center](https://docs.aws.amazon.
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">3) Forecasted spending dự kiến đạt 100%</li>
   </ul>
 
-  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ví dụ với budget $100</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Ví dụ với budget 100 đô</p>
   <ul>
-    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual 85% => Đã tiêu $85 => Sắp chạm ngân sách</li>
-    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual 100% => Đã tiêu $100 => Đã đạt hoặc vượt ngân sách</li>
-    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Forecasted 100% => AWS dự đoán cuối tháng ≥ $100 => Chưa tiêu $100, nhưng có khả năng sẽ vượt</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual 85% => Đã tiêu 85 đô => Sắp chạm ngân sách</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Actual 100% => Đã tiêu 100 đô => Đã đạt hoặc vượt ngân sách</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Forecasted 100% => AWS dự đoán cuối tháng ≥ 100 đô => Chưa tiêu $100, nhưng có khả năng sẽ vượt</li>
   </ul>
 
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold; margin-bottom: 10px">Forecasted hoạt động như thế nào?</p>
