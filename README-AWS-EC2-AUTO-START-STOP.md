@@ -1471,7 +1471,7 @@ Tài liệu: [Configure a Scheduler dead-letter queue](https://docs.aws.amazon.c
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- IAM execution role: Cho phép Scheduler gọi hành động đó</li>
   </ul>
 
-  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Group chỉ chứa schedule. Những thông tin như dới đây đều được cấu hình ở từng schedule, không phải ở group</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Group chỉ chứa schedule. Những thông tin như dưới đây đều được cấu hình ở từng schedule, không phải ở group</p>
   <ul>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">07:00 hay 22:00</li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Time zone</li>
