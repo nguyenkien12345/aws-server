@@ -1461,6 +1461,76 @@ Tài liệu: [Configure a Scheduler dead-letter queue](https://docs.aws.amazon.c
 
 ## 18. Bước 13 — Tạo schedule group riêng
 
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Schedule group là resource dùng để tổ chức các schedule có chung mục đích hoặc môi trường. Mỗi account đã có sẵn group tên default, nhưng bạn có thể tạo group riêng.</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Phân biệt Group và Schedule</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Schedule group: Gom nhóm và quản lý các lịch</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Schedule: Xác định chính xác lúc nào chạy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Target: Hành động được gọi, ví dụ ec2:StartInstances</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- IAM execution role: Cho phép Scheduler gọi hành động đó</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Group chỉ chứa schedule. Những thông tin như dới đây đều được cấu hình ở từng schedule, không phải ở group</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">07:00 hay 22:00</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Time zone</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Cron expression</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">EC2 instance ID</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Start hay Stop</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Retry policy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Dead-letter queue</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">IAM execution role</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Có bắt buộc tạo group riêng không? Không bắt buộc. Bạn có hai lựa chọn:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Dùng default: Test cực nhanh, chỉ một vài schedule tạm thời</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Tạo group riêng: Muốn setup rõ ràng, có tag, dễ phân quyền và quản lý lâu dài</li>
+  </ul>
+
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px;">Với hệ thống của bạn, mình đề xuất: tạo group riêng: ec2-dev-auto-start-stop</b></p>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <span style="font-weight: bold; font-size: 20px;">★ Lý do là bạn đã có tối thiểu hai schedule liên quan trực tiếp với nhau:</span>
+    <span>07:00 → Start EC2</span>
+    <span>22:00 → Stop EC2</span>
+    <span style="background: #FFF6DC; padding: 8px; font-weight: bold;">Khi nhìn vào group, bạn sẽ nhận ra ngay chúng là một cặp automation của cùng một server/môi trường</span>
+  </div>
+
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">★ Hai lưu ý rất quan trọng</b></p>
+  
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">✷ 1) Schedule không thể chuyển sang group khác</p>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <span style="margin-left: 30px; font-size: 16px;">- Khi tạo schedule, bạn chọn group một lần</span>
+    <span style="margin-left: 30px; font-size: 16px;">- Sau đó AWS không cho “move” schedule từ group này sang group khác. Muốn đổi group, bạn phải:</span>
+    <ul>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">1) Tạo schedule mới trong group mới</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">2) Kiểm tra schedule mới</li>
+      <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">3) Disable hoặc xóa schedule cũ</li>
+    </ul>
+    <span style="background: #FFF6DC; padding: 8px; font-weight: bold;">AWS ghi rõ group chỉ được gán khi tạo schedule và không thể thay đổi association về sau. Vì vậy hãy tạo group trước, rồi mới tạo hai schedule bật/tắt EC2</span>
+  </div>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">✷ 2) Xóa group sẽ xóa toàn bộ schedule bên trong</p>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <span style="margin-left: 30px; font-size: 16px;">- Nếu xóa: <b style="color: red;">ec2-dev-auto-start-stop</b> thì AWS sẽ xóa cả:  <b style="color: red;">start-ec2-at-0700 và stop-ec2-at-2200</b></span>
+    <span style="margin-left: 30px; font-size: 16px; background: #FFF6DC; font-weight: bold; padding: 8px;">Trong khi group ở trạng thái DELETING, một số schedule đến thời điểm chạy vẫn có thể gọi target cho tới khi quá trình xóa hoàn tất</span>
+    <span style="margin-left: 30px; font-size: 16px; background: #FFF6DC; font-weight: bold; padding: 8px;">Khi cần tạm dừng automation, nên: Disable từng schedule, không xóa cả group</span>
+  </div>
+
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">★ Group không thay thế IAM execution role</b></p>
+  <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+    <span style="margin-left: 30px; font-size: 16px; font-weight: bold">Sau khi tạo group, Scheduler vẫn chưa có quyền bật/tắt EC2. Bạn vẫn cần IAM execution role với quyền tối thiểu và trust policy cho phép Scheduler assume role</span>
+  </div>
+
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">★ Tách biệt trách nhiệm</b></p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="text-decoration: underline; color: red;">Schedule group</b> → Tổ chức và phân loại</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="text-decoration: underline; color: red;">Schedule</b> → Quy định giờ chạy và hành động</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="text-decoration: underline; color: red;">Execution role</b> → Cấp quyền thực hiện hành động</li>
+  </ul>
+</div>
+
 1. Mở [EventBridge Scheduler Console](https://console.aws.amazon.com/scheduler/home).
 2. Vào **Schedule groups**.
 3. Chọn **Create schedule group**.
