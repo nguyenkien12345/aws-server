@@ -1445,6 +1445,81 @@ active
 **Kỹ thuật đang thực hiện:** reboot test chứng minh boot chain đầy đủ: Linux khởi động → systemd khởi động service → ứng dụng kết nối dependency → health check thành công. Nếu bước này chưa qua, lịch StartInstances chỉ làm EC2 `running`, ứng dụng có thể vẫn hỏng.
 
 ## 17. Bước 12 — Tạo SQS dead-letter queue
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">queue là một hàng đợi của Amazon SQS (Simple Queue Service). Bạn có thể hình dung nó như một hộp thư chứa các công việc cần làm. Một phần của hệ thống gửi công việc vào hộp; một phần khác lấy ra và xử lý. SQS giữ các message ở giữa hai bước đó</p>
+  
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Ví dụ với backend NestJS của bạn</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">1) Người dùng nhấn Xuất báo cáo doanh thu</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">2) API tạo một message: { "type": "EXPORT_REVENUE", "userId": "123", "month": 9 } và gửi vào queue</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">3) API có thể trả lời ngay: “Đã nhận yêu cầu”</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">4) Một worker lấy message, truy vấn dữ liệu, tạo file và cập nhật trạng thái công việc</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">5) Xử lý thành công thì worker xóa message khỏi queue. Nếu worker gặp lỗi hoặc ngừng chạy trước khi xóa, message có thể xuất hiện lại để được xử lý tiếp</li>
+  </ul>
+  
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Mục đích chính là tách lúc nhận yêu cầu khỏi lúc thực hiện công việc. Nhờ vậy API không phải bắt người dùng chờ một tác vụ lâu; worker có thể xử lý dần khi lượng yêu cầu tăng đột biến. Nếu worker tạm thời ngừng hoạt động, các message vẫn có thể chờ trong queue theo thời hạn lưu trữ đã cấu hình. Queue chỉ chuyển và giữ message: bạn vẫn cần code worker hoặc cấu hình Lambda để thực sự làm việc</p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Thường dùng cho bài toán nào?</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bài toán: <b>Gửi email, thông báo</b> => API ghi nhận sự kiện; worker gửi email hoặc thông báo sau</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bài toán: <b>Xuất Excel/PDF</b> => Worker tạo file có thể mất vài phút</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bài toán: <b>Xử lý ảnh/video</b> => Worker tạo thumbnail, nén hoặc chuyển định dạng</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bài toán: <b>Đồng bộ hệ thống</b> => Gửi yêu cầu cập nhật sang dịch vụ khác và thử lại khi gặp lỗi tạm thời</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bài toán: <b>Đơn hàng, thanh toán</b> => Xử lý các bước tiếp theo sau khi ghi nhận giao dịch; cần kiểm soát rất kỹ việc xử lý trùng</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Bài toán: <b>Lưu lượng tăng đột biến</b> => Nhiều yêu cầu đến cùng lúc được xếp hàng để worker xử lý theo năng lực hiện có</li>
+  </ul>
+
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">SQS queue phù hợp khi bạn muốn API ghi nhận công việc ngay, còn một worker thực hiện công việc đó sau, có khả năng chờ và thử xử lý lại khi gặp lỗi</b></p>
+
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px;">Các options trong Create queue (Để dễ hình dung, mình dùng xuyên suốt ví dụ: API NestJS gửi yêu cầu xuất báo cáo vào queue; một worker lấy yêu cầu ra để tạo file)</b></p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Details (tạo loại queue nào)</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Standard</b>: Ưu tiên xử lý nhiều message. Một message có thể được giao lại và thứ tự nhận có thể khác thứ tự gửi. Phù hợp với 100 yêu cầu xuất báo cáo độc lập: báo cáo nào làm trước cũng được</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">FIFO</b>: Giữ thứ tự message trong cùng một message group và có cơ chế chống gửi trùng. Phù hợp nếu các thao tác Tạo đơn → Xác nhận đơn → Hủy đơn của cùng một đơn cần được xử lý theo thứ tự. Worker vẫn nên có logic chống thực hiện nghiệp vụ hai lần khi gặp lỗi và chạy lại</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Configuration</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Visibility timeout</b> Sau khi worker nhận một message, SQS tạm ẩn nó khỏi worker khác trong 30 giây. Nếu worker tạo báo cáo mất 45 giây mà chưa xóa message, sau giây thứ 30 message có thể được giao cho worker khác → hai worker cùng làm một báo cáo. Hãy đặt thời gian phù hợp với thời gian xử lý, hoặc gia hạn khi cần</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Message retention period</b> SQS giữ message chưa được xóa tối đa 4 ngày. Ví dụ worker hỏng và không chạy lại trong 4 ngày thì message có thể hết hạn. Đây không phải thời gian worker được phép xử lý một message</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Delivery delay</b> Message mới gửi vào có thể được nhận ngay. Nếu đặt 60 giây, mọi message mới gửi vào queue sẽ chờ 60 giây trước khi worker nhìn thấy. Giới hạn của tùy chọn này là 15 phút</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Maximum message size</b> Kích thước tối đa của một message. Ví dụ gửi { "reportId": "abc" } thì nhỏ; không nên nhét nguyên file báo cáo vào message. Có thể lưu file ở S3 rồi gửi đường dẫn hoặc ID qua SQS</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Receive message wait time</b> Worker hỏi “có việc không?”, SQS trả lời ngay, kể cả khi rỗng (short polling). Nếu đặt 20 giây, SQS có thể chờ tối đa 20 giây để có message rồi mới trả lời (long polling), giúp giảm các lần hỏi mà không nhận được gì. Đây không phải thời gian xử lý message</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Phân biệt hai mốc dễ nhầm: <b style="color: red; text-decoration: underline">Delivery delay</b> bắt đầu khi gửi message vào queue; <b style="color: red; text-decoration: underline">Visibility timeout</b> bắt đầu khi worker nhận message</p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Encryption — mã hóa message khi lưu trong SQS</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Server-side encryption:</b> mã hóa message khi SQS lưu trữ (at rest). Ví dụ nội dung message có mã đơn hàng thì nên giữ mã hóa bật</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Encryption key type: Amazon SQS key (SSE-SQS):</b> SQS quản lý khóa mã hóa giúp bạn, phù hợp khi không có yêu cầu riêng về quản lý khóa</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Encryption key type: AWS Key Management Service key (SSE-KMS):</b> Dùng khóa qua AWS KMS khi bạn cần kiểm soát quyền dùng khóa, quản lý khóa riêng hoặc có yêu cầu cụ thể về khóa. Cần cấu hình quyền KMS cho các thành phần gửi và nhận message; KMS cũng có thể phát sinh chi phí riêng</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Access policy</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Choose method</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Basic</b>: cho bạn chọn bằng giao diện; AWS tạo JSON policy tương ứng ở khung bên phải</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Advanced</b>: cho phép tự viết JSON, chẳng hạn chỉ cho một AWS service hoặc một role cụ thể gửi message với các điều kiện bổ sung</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Define who can send messages to the queue</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ai được đưa việc vào queue? Ví dụ chỉ backend gửi yêu cầu xuất báo cáo; hoặc cho một AWS account/role khác gửi</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Define who can receive messages from the queue</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ai được lấy việc ra? Ví dụ chỉ worker đọc queue; có thể cấp quyền cho account/role được chỉ định khi cần</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Dead-letter queue - Optional</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Dead-letter queue</b> là queue giữ các message xử lý thất bại nhiều lần để bạn kiểm tra lỗi. Queue này là queue nguồn, và bạn chọn DLQ để gửi message lỗi tới; sau đó đặt số lần nhận tối đa. Ví dụ worker cứ lỗi vì reportId không tồn tại; sau số lần nhận cho phép, message được chuyển từ export-report-jobs sang export-report-failed</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; font-weight: bold">Redrive allow policy</b> Queue này là DLQ đích, và bạn quyết định queue nguồn nào được phép dùng nó làm DLQ: cho tất cả, chỉ queue chỉ định, hoặc không queue nào. Ví dụ Trên export-report-failed, chỉ cho export-report-jobs dùng nó làm DLQ</li>
+  </ul>
+</div>
 
 1. Mở [Amazon SQS Console](https://console.aws.amazon.com/sqs/).
 2. Chọn **Create queue**.
