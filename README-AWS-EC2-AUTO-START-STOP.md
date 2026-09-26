@@ -1641,6 +1641,76 @@ Thay toàn bộ giá trị ví dụ trong các policy dưới đây. JSON không
 
 ### 20.1 Tạo role
 
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Trust Policy này đúng chuẩn bảo mật của AWS và đã được giới hạn khá chặt cho EventBridge Scheduler:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ dịch vụ scheduler.amazonaws.com được phép assume role</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ request xuất phát từ AWS account 123456789012</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ các schedule nằm trong group test-server-power-management</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ ở Region ap-southeast-1</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ được thực hiện sts:AssumeRole</li>
+  </ul>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nếu account ID, Region và group name đều chính xác thì không cần đổi StringEquals thành ArnLike</p>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nó trả lời câu hỏi: Ai hoặc dịch vụ nào được phép “mượn” IAM role này?</p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">EventBridge Scheduler không tự nhiên có quyền bật/tắt EC2. Đến thời điểm thực thi, nó phải:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Gọi AWS STS</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Xin assume execution role</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- STS kiểm tra Trust Policy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Nếu đúng, STS cấp temporary credentials</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Scheduler dùng credentials đó gọi EC2 API</li>
+  </ul>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">AWS gọi đây là execution role: IAM role mà Scheduler assume để tương tác với service đích thay mặt bạn</p>
+  <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">Phân tích từng phần</b></p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Version</b> Đây là phiên bản ngôn ngữ IAM Policy. VD: 2012-10-17 là phiên bản IAM policy language hiện hành và nên giữ nguyên</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Statement</b> Đây là danh sách các quy tắc cho phép hoặc từ chối. Nó là array nên có thể chứa nhiều statement. Policy hiện tại chỉ có một statement, phù hợp vì role này chỉ nên dành cho EventBridge Scheduler</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Effect</b> "Effect": "Allow" => Cho phép hành động được mô tả phía dưới nếu toàn bộ điều kiện đều đúng. Điều này không có nghĩa là mọi đối tượng đều được phép. Nó phải đồng thời khớp: Principal, AND Action, AND aws:SourceAccount, AND aws:SourceArn. IAM mặc định là implicit deny. Bất kỳ request nào không khớp statement này đều bị từ chối, trừ khi có statement Allow khác trong Trust Policy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red;">Principal</b> xác định ai được tin tưởng. Ở đây Principal là Amazon EventBridge Scheduler service (Tên chính xác là: scheduler.amazonaws.com)</span><br/>
+      <span style="background: #A5D6A7"><b style="color: red;">Tại sao không dùng account ID làm Principal?</b> • Bởi vì người trực tiếp assume role không phải IAM user hoặc IAM role của bạn. Chính dịch vụ EventBridge Scheduler thực hiện AssumeRole</span><br/>
+      <span style="background: #A5D6A7"><b style="color: red;">Principal này có quá rộng không?</b> • Vì chúng ta đã thêm SourceAccount và SourceArn để khóa phạm vi lại. Đây chính là phần bảo mật quan trọng nhất</span>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red;">Action</b> Cho phép principal gọi API: AWS Security Token Service → AssumeRole</span><br/>
+      <span style="background: #A5D6A7"> • Khi assume role thành công, STS cấp credentials tạm thời gồm: Access key ID tạm thời, Secret access key tạm thời, Session token, Thời hạn sử dụng. Nó không phải thông tin đăng nhập cố định.</span><br/>
+      <span style="background: #A5D6A7"><b style="color: red;">Dòng này có cho phép bật/tắt EC2 không?</b> • Trust Policy chỉ cho phép Scheduler assume role. Việc role có được gọi ec2:StartInstances hoặc ec2:StopInstances hay không nằm trong Permission Policy của role</span><br/>
+      <span style="background: #A5D6A7">Hai lớp hoàn toàn khác nhau:</span><br/>
+      <span style="background: #A5D6A7"><b style="color: red;">Trust Policy</b> => Ai được assume role?</span><br/>
+      <span style="background: #A5D6A7"><b style="color: red;">Permission Policy</b> => Sau khi assume role, được làm gì?</span><br/>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red;">Condition</b> Hai điều kiện nằm chung trong StringEquals, vì vậy IAM áp dụng quan hệ AND. Chỉ đúng một trong hai vẫn bị từ chối</span><br/>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red;">aws:SourceAccount</b> • Điều kiện này yêu cầu EventBridge Scheduler phải đang hành động thay mặt cho đúng AWS account: 123456789012. Giả sử một người ở AWS account khác biết ARN execution role của bạn. ARN role không phải secret. Họ cố tạo một EventBridge Schedule trong account của họ và trỏ execution role đến role của bạn. Principal vẫn đúng, nhưng SourceAccount không khớp. aws:SourceAccount giúp bảo đảm AWS service chỉ truy cập tài nguyên thay mặt cho account mà bạn mong đợi. Đây phải là account sở hữu EventBridge Scheduler schedule group</span><br/>
+    </li>
+   <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red;">aws:SourceArn</b> • Điều kiện này giới hạn cụ thể Scheduler resource nào được phép dùng role</span><br/>
+      <span><b style="color: red;">Phân tích ARN:</b></span><br/>
+      <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+arn:aws:scheduler:ap-southeast-1:123456789012:schedule-group/test-server-power-management
+│   │   │         │              │            │              │
+│   │   │         │              │            │              └─ Group name
+│   │   │         │              │            └─ Resource type
+│   │   │         │              └─ AWS Account ID
+│   │   │         └─ AWS Region
+│   │   └─ AWS service
+│   └─ AWS partition
+└─ ARN prefix
+    </pre>
+      <span><b style="color: red;">arn</b> • Cho biết đây là Amazon Resource Name</span><br/>
+      <span><b style="color: red;">aws</b> • AWS partition thông thường</span><br/>
+      <span><b style="color: red;">scheduler</b> • Service namespace của EventBridge Scheduler.</span><br/>
+      <span><b style="color: red;">ap-southeast-1</b> • Region Singapore</span><br/>
+      <span><b style="color: red;">123456789012</b> • AWS account sở hữu Schedule group. Nó nên trùng với aws:SourceAccount</span><br/>
+      <span><b style="color: red;">schedule-group</b> • Đây là resource type. AWS yêu cầu aws:SourceArn của EventBridge Scheduler execution role phải trỏ đến Schedule Group ARN, không nên trỏ đến một schedule riêng hoặc prefix schedule. AWS đã chuyển cơ chế trust scoping sang Schedule Group ARN; dùng ARN kiểu schedule cũ còn có thể liên quan đến giới hạn request rate dành cho khách hàng legacy</span><br/>
+      <span><b style="color: red;">test-server-power-management</b> • Tên group duy nhất được phép dùng role này</span><br/>
+    </li>
+  </ul>
+</div>
+
 1. IAM → **Roles → Create role**.
 2. Trusted entity type: **Custom trust policy**.
 3. Dán trust policy dưới đây sau khi thay account ID, Region và group:
