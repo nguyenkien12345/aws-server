@@ -1650,7 +1650,9 @@ Thay toàn bộ giá trị ví dụ trong các policy dưới đây. JSON không
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ ở Region ap-southeast-1</li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ được thực hiện sts:AssumeRole</li>
   </ul>
+
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nếu account ID, Region và group name đều chính xác thì không cần đổi StringEquals thành ArnLike</p>
+
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nó trả lời câu hỏi: Ai hoặc dịch vụ nào được phép “mượn” IAM role này?</p>
 
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">EventBridge Scheduler không tự nhiên có quyền bật/tắt EC2. Đến thời điểm thực thi, nó phải:</p>
@@ -1661,7 +1663,9 @@ Thay toàn bộ giá trị ví dụ trong các policy dưới đây. JSON không
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Nếu đúng, STS cấp temporary credentials</li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Scheduler dùng credentials đó gọi EC2 API</li>
   </ul>
+
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">AWS gọi đây là execution role: IAM role mà Scheduler assume để tương tác với service đích thay mặt bạn</p>
+
   <p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">Phân tích từng phần</b></p>
   <ul>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Version</b> Đây là phiên bản ngôn ngữ IAM Policy. VD: 2012-10-17 là phiên bản IAM policy language hiện hành và nên giữ nguyên</li>
@@ -1669,44 +1673,136 @@ Thay toàn bộ giá trị ví dụ trong các policy dưới đây. JSON không
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Effect</b> "Effect": "Allow" => Cho phép hành động được mô tả phía dưới nếu toàn bộ điều kiện đều đúng. Điều này không có nghĩa là mọi đối tượng đều được phép. Nó phải đồng thời khớp: Principal, AND Action, AND aws:SourceAccount, AND aws:SourceArn. IAM mặc định là implicit deny. Bất kỳ request nào không khớp statement này đều bị từ chối, trừ khi có statement Allow khác trong Trust Policy</li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
       <span><b style="color: red;">Principal</b> xác định ai được tin tưởng. Ở đây Principal là Amazon EventBridge Scheduler service (Tên chính xác là: scheduler.amazonaws.com)</span><br/>
-      <span style="background: #A5D6A7"><b style="color: red;">Tại sao không dùng account ID làm Principal?</b> • Bởi vì người trực tiếp assume role không phải IAM user hoặc IAM role của bạn. Chính dịch vụ EventBridge Scheduler thực hiện AssumeRole</span><br/>
-      <span style="background: #A5D6A7"><b style="color: red;">Principal này có quá rộng không?</b> • Vì chúng ta đã thêm SourceAccount và SourceArn để khóa phạm vi lại. Đây chính là phần bảo mật quan trọng nhất</span>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Tại sao không dùng account ID làm Principal?</b> => Bởi vì người trực tiếp assume role không phải IAM user hoặc IAM role của bạn. Chính dịch vụ EventBridge Scheduler thực hiện AssumeRole</span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Principal này có quá rộng không?</b> => Vì chúng ta đã thêm SourceAccount và SourceArn để khóa phạm vi lại. Đây chính là phần bảo mật quan trọng nhất</span>
     </li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
       <span><b style="color: red;">Action</b> Cho phép principal gọi API: AWS Security Token Service → AssumeRole</span><br/>
-      <span style="background: #A5D6A7"> • Khi assume role thành công, STS cấp credentials tạm thời gồm: Access key ID tạm thời, Secret access key tạm thời, Session token, Thời hạn sử dụng. Nó không phải thông tin đăng nhập cố định.</span><br/>
-      <span style="background: #A5D6A7"><b style="color: red;">Dòng này có cho phép bật/tắt EC2 không?</b> • Trust Policy chỉ cho phép Scheduler assume role. Việc role có được gọi ec2:StartInstances hoặc ec2:StopInstances hay không nằm trong Permission Policy của role</span><br/>
-      <span style="background: #A5D6A7">Hai lớp hoàn toàn khác nhau:</span><br/>
-      <span style="background: #A5D6A7"><b style="color: red;">Trust Policy</b> => Ai được assume role?</span><br/>
-      <span style="background: #A5D6A7"><b style="color: red;">Permission Policy</b> => Sau khi assume role, được làm gì?</span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Khi assume role thành công</b> => STS cấp credentials tạm thời gồm: Access key ID tạm thời, Secret access key tạm thời, Session token, Thời hạn sử dụng. Nó không phải thông tin đăng nhập cố định.</span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Dòng này có cho phép bật/tắt EC2 không?</b> => Trust Policy chỉ cho phép Scheduler assume role. Việc role có được gọi ec2:StartInstances hoặc ec2:StopInstances hay không nằm trong Permission Policy của role</span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Hai lớp hoàn toàn khác nhau:</b></span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Trust Policy</b> => Ai được assume role?</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Permission Policy</b> => Sau khi assume role, được làm gì?</span>
     </li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
-      <span><b style="color: red;">Condition</b> Hai điều kiện nằm chung trong StringEquals, vì vậy IAM áp dụng quan hệ AND. Chỉ đúng một trong hai vẫn bị từ chối</span><br/>
+      <span><b style="color: red;">Condition</b> Hai điều kiện nằm chung trong StringEquals, vì vậy IAM áp dụng quan hệ AND. Chỉ đúng một trong hai vẫn bị từ chối</span>
     </li>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
-      <span><b style="color: red;">aws:SourceAccount</b> • Điều kiện này yêu cầu EventBridge Scheduler phải đang hành động thay mặt cho đúng AWS account: 123456789012. Giả sử một người ở AWS account khác biết ARN execution role của bạn. ARN role không phải secret. Họ cố tạo một EventBridge Schedule trong account của họ và trỏ execution role đến role của bạn. Principal vẫn đúng, nhưng SourceAccount không khớp. aws:SourceAccount giúp bảo đảm AWS service chỉ truy cập tài nguyên thay mặt cho account mà bạn mong đợi. Đây phải là account sở hữu EventBridge Scheduler schedule group</span><br/>
+      <span><b style="color: red;">aws:SourceAccount</b></span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Điều kiện này yêu cầu EventBridge Scheduler phải đang hành động thay mặt cho đúng AWS account: 123456789012</b></span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Nó bảo vệ điều gì?</b> => Giả sử một người ở AWS account khác biết ARN execution role của bạn. ARN role không phải secret. Họ cố tạo một EventBridge Schedule trong account của họ và trỏ execution role đến role của bạn. Principal vẫn đúng, nhưng SourceAccount không khớp. aws:SourceAccount giúp bảo đảm AWS service chỉ truy cập tài nguyên thay mặt cho account mà bạn mong đợi. Đây phải là account sở hữu EventBridge Scheduler schedule group
+</span>
     </li>
    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
-      <span><b style="color: red;">aws:SourceArn</b> • Điều kiện này giới hạn cụ thể Scheduler resource nào được phép dùng role</span><br/>
-      <span><b style="color: red;">Phân tích ARN:</b></span><br/>
+      <span><b style="color: red;">aws:SourceArn</b></span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Điều kiện này giới hạn cụ thể Scheduler resource nào được phép dùng role</b></span><br/>
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Phân tích ARN</b></span><br/>
       <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
-arn:aws:scheduler:ap-southeast-1:123456789012:schedule-group/test-server-power-management
-│   │   │         │              │            │              │
-│   │   │         │              │            │              └─ Group name
-│   │   │         │              │            └─ Resource type
-│   │   │         │              └─ AWS Account ID
-│   │   │         └─ AWS Region
-│   │   └─ AWS service
-│   └─ AWS partition
-└─ ARN prefix
+          arn:aws:scheduler:ap-southeast-1:123456789012:schedule-group/test-server-power-management
+          │   │   │         │              │            │              │
+          │   │   │         │              │            │              └─ Group name
+          │   │   │         │              │            └─ Resource type
+          │   │   │         │              └─ AWS Account ID
+          │   │   │         └─ AWS Region
+          │   │   └─ AWS service
+          │   └─ AWS partition
+          └─ ARN prefix
     </pre>
-      <span><b style="color: red;">arn</b> • Cho biết đây là Amazon Resource Name</span><br/>
-      <span><b style="color: red;">aws</b> • AWS partition thông thường</span><br/>
-      <span><b style="color: red;">scheduler</b> • Service namespace của EventBridge Scheduler.</span><br/>
-      <span><b style="color: red;">ap-southeast-1</b> • Region Singapore</span><br/>
-      <span><b style="color: red;">123456789012</b> • AWS account sở hữu Schedule group. Nó nên trùng với aws:SourceAccount</span><br/>
-      <span><b style="color: red;">schedule-group</b> • Đây là resource type. AWS yêu cầu aws:SourceArn của EventBridge Scheduler execution role phải trỏ đến Schedule Group ARN, không nên trỏ đến một schedule riêng hoặc prefix schedule. AWS đã chuyển cơ chế trust scoping sang Schedule Group ARN; dùng ARN kiểu schedule cũ còn có thể liên quan đến giới hạn request rate dành cho khách hàng legacy</span><br/>
-      <span><b style="color: red;">test-server-power-management</b> • Tên group duy nhất được phép dùng role này</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • arn</b> => Cho biết đây là Amazon Resource Name</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • aws</b> => AWS partition thông thường</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • scheduler</b> => Service namespace của EventBridge Scheduler.</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • ap-southeast-1</b> => Region Singapore</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • 123456789012</b> => AWS account sở hữu Schedule group. Nó nên trùng với aws:SourceAccount</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • schedule-group</b> => Đây là resource type. AWS yêu cầu aws:SourceArn của EventBridge Scheduler execution role phải trỏ đến Schedule Group ARN, không nên trỏ đến một schedule riêng hoặc prefix schedule. AWS đã chuyển cơ chế trust scoping sang Schedule Group ARN; dùng ARN kiểu schedule cũ còn có thể liên quan đến giới hạn request rate dành cho khách hàng legacy</span><br/>
+    <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • test-server-power-management</b> => Tên group duy nhất được phép dùng role này</span><br/>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • StringEquals có đúng không?</b> => Có. Với ARN chính xác, StringEquals là lựa chọn tốt nhất. Nó yêu cầu khớp chính xác toàn bộ chuỗi</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Có nên đổi thành ArnLike không?</b> => Không cần trong trường hợp hiện tại. ArnLike dùng khi có wildcard. Ví dụ: "aws:SourceArn": "arn:aws:scheduler:ap-southeast-1:123456789012:schedule-group/test-*" hoặc "aws:SourceArn": "arn:aws:scheduler:*:123456789012:schedule-group/*". Nhưng wildcard mở rộng phạm vi tin cậy</span>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Wildcard</b> là ký tự đại diện dùng để khớp với nhiều giá trị khác nhau thay vì phải ghi chính xác từng giá trị. Có thể hiểu wildcard giống như chức năng tìm kiếm. Ví dụ: test-* nghĩa là: Khớp với mọi chuỗi bắt đầu bằng test-.</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Hai wildcard thường gặp trong AWS IAM</b></span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • *</b> => Đại diện cho 0 hoặc nhiều ký tự</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • ?</b> => Đại diện cho đúng 1 ký tự</span><br/>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Policy này chống “confused deputy” như thế nào?</b> => Policy hiện tại giải quyết bằng ba câu hỏi:</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Dịch vụ gọi có phải EventBridge Scheduler không?</b> => Principal.Service
+</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Scheduler đang hành động thay account nào?</b> => aws:SourceAccount</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Scheduler đang hành động cho schedule group nào?</b> => aws:SourceArn</span>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Có cần DescribeInstances không?</b> => ec2:DescribeInstances là quyền IAM cho phép xem thông tin các EC2 Instance, nhưng không được thay đổi chúng</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Nó có thể đọc các thông tin như:</b> => Instance ID, tên và trạng thái running/stopped, Instance type như t3.micro, IP public/private, VPC, subnet, security group, Tags và thời điểm khởi tạo</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Ví dụ Permission Policy:</b></span><br/>
+      <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+        {
+          "Effect": "Allow",
+          "Action": "ec2:DescribeInstances",
+          "Resource": "*"
+        }      
+      </pre>
+     <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Resource thường phải là "*"</b> => vì API DescribeInstances không hỗ trợ giới hạn theo một instance ARN cụ thể. Nó là quyền chỉ đọc: không thể bật, tắt, sửa hoặc xóa EC2. Với EventBridge Scheduler gọi trực tiếp StartInstances/StopInstances, thường không cần thêm quyền này</span>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Có cần thêm Sid không?</b></span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Sid</b> => là viết tắt của Statement ID — tên định danh giúp con người nhận biết mục đích của từng Statement trong IAM Policy</span><br/>
+      <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+        {
+          "Sid": "AllowSchedulerToAssumeRole",
+          "Effect": "Allow",
+          "Action": "sts:AssumeRole"
+        }      
+      </pre>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Ý nghĩa:</b> => Statement này cho phép Scheduler assume role</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Lưu ý:</b></span><br/>
+      <span style="margin-left: 48px;"> - Sid không cấp hay giới hạn quyền</span><br/>
+      <span style="margin-left: 48px;"> - Thêm, sửa hoặc xóa Sid không làm thay đổi cách policy hoạt động</span><br/>
+      <span style="margin-left: 48px;"> - Sid nên ngắn, rõ nghĩa và không có khoảng trắng</span><br/>
+      <span style="margin-left: 48px;"> - Nó đặc biệt hữu ích khi policy có nhiều statement để đọc, audit và debug dễ hơn</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Có thể hiểu đơn giản:</b> => Sid = tên ghi chú của Statement dành cho con người</span>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Có cần ExternalId không?</b></span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • ExternalId</b> => là một mã nhận diện bí mật tương đối dùng khi cho bên thứ ba assume IAM Role, nhằm ngăn họ dùng nhầm role của bạn cho khách hàng khác</span><br/>
+      <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+          "Condition": {
+            "StringEquals": {
+              "sts:ExternalId": "company-a-unique-id"
+            }
+          }
+      </pre>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Khi assume role, bên thứ ba phải gửi đúng</b> => company-a-unique-id. Nếu sai hoặc thiếu, AWS từ chối</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Có thể hiểu</b></span><br/>
+      <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Role ARN</b> => địa chỉ căn nhà</span><br/>
+      <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • ExternalId</b> => mã xác nhận đúng khách hàng</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Lưu ý:</b></span><br/>
+      <span style="margin-left: 48px;"> - Dùng chủ yếu cho truy cập cross-account của SaaS/đối tác</span><br/>
+      <span style="margin-left: 48px;"> - Mỗi khách hàng nên có ExternalId riêng do bên thứ ba cấp</span><br/>
+      <span style="margin-left: 48px;"> - Nó không phải password và có thể xuất hiện trong policy</span><br/>
+      <span style="margin-left: 48px;"> - Không cần dùng cho EventBridge Scheduler; trường hợp của bạn dùng aws:SourceAccount và aws:SourceArn là đúng hơn</span>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span style="margin-left: 12px;"><b style="color: red; background: #A5D6A7"> • Có cần aws:SourceOrgID không?</b></span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • aws:SourceOrgID</b> => là điều kiện IAM dùng để kiểm tra request có xuất phát từ một AWS account thuộc đúng AWS Organization được chỉ định hay không</span><br/>
+      <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+          "Condition": {
+            "StringEquals": {
+              "aws:SourceOrgID": "o-abc123xyz"
+            }
+          }
+      </pre>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Ý nghĩa:</b></span> Chỉ cho phép AWS service thực hiện request thay mặt các account thuộc Organization o-abc123xyz<br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Có thể hiểu:</b></span><br/>
+      <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • aws:SourceAccount</b> => kiểm tra đúng một account</span><br/>
+      <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • aws:SourceOrgID</b> => kiểm tra đúng cả một tổ chức gồm nhiều account</span><br/>
+      <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Lưu ý:</b></span><br/>
+      <span style="margin-left: 48px;"> - Hữu ích khi doanh nghiệp có nhiều AWS account trong AWS Organizations</span><br/>
+      <span style="margin-left: 48px;"> - Account rời khỏi Organization sẽ không còn thỏa điều kiện</span><br/>
+      <span style="margin-left: 48px;"> - Với trường hợp của bạn chỉ cho phép một account cụ thể, aws:SourceAccount chặt chẽ hơn nên chưa cần aws:SourceOrgID</span><br/>
+      <span style="margin-left: 48px;"> - Đây không phải Organization ARN; giá trị có dạng o-xxxxxxxxxx</span><br/>
     </li>
   </ul>
 </div>
