@@ -1837,6 +1837,70 @@ Thay toàn bộ giá trị ví dụ trong các policy dưới đây. JSON không
 
 ### 20.2 Thêm inline permission policy
 
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Đây là Inline Permission Policy gắn trực tiếp vào IAM Role, dùng để quy định: Sau khi EventBridge Scheduler mượn được role, nó được phép làm những gì và trên tài nguyên nào?</p>
+  <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+    {
+      "Sid": "StartOnlyTheTestInstance",
+      "Effect": "Allow",
+      "Action": "ec2:StartInstances",
+      "Resource": "arn:aws:ec2:ap-southeast-1:123456789012:instance/i-0123456789abcdef0"
+    }
+  </pre>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nghĩa là Scheduler:</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Được gọi StartInstances</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Chỉ trên instance i-0123456789abcdef0</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Không được bật EC2 khác</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Không được stop hay terminate EC2</li>
+  </ul>
+</div>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Nếu Scheduler không bật được EC2 và đã retry hết số lần cấu hình, nó được gửi thông tin lỗi vào SQS Dead-Letter Queue: test-server-scheduler-dlq để bạn kiểm tra nguyên nhân sau. Quyền này chỉ có tác dụng khi schedule đã được cấu hình sử dụng DLQ đó</p>
+  <pre style="white-space: pre-wrap; font-family: monospace; margin-top: 0px; margin: 0px; padding: 0px;">
+    {
+      "Sid": "SendFailureToOnlyTheSchedulerDLQ",
+      "Effect": "Allow",
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:ap-southeast-1:123456789012:test-server-scheduler-dlq"
+    }
+  </pre>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Ví dụ luồng hoạt động 07:00</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- EventBridge Scheduler xin mượn IAM Role</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Trust Policy kiểm tra và đồng ý</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Scheduler nhận quyền từ Inline Policy</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Gọi ec2:StartInstances cho đúng EC2</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">- Nếu thất bại sau khi retry: gửi lỗi vào đúng SQS DLQ</li>
+  </ul>
+</div>
+
+<p style="background: yellow;  padding-left: 10px; padding-right: 10px;"><b style="color: red; font-size: 20px; text-transform: uppercase;">Khi nào dùng Trust Policy và Inline Policy?</b></p>
+<p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Không phải chọn một trong hai. Một Scheduler execution role thường cần cả hai:</p>
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Custom Trust Policy:</b> Ai được phép mượn role?</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Inline Permission Policy:</b> Mượn role xong được làm gì?</li>
+  </ul>
+</div>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <span style="font-weight: bold; font-size: 20px;"> ★ Custom Trust Policy => Dùng khi tạo IAM Role để cho phép EventBridge Scheduler assume role:</span>
+  <span style="background: #FFF6DC; padding: 8px; font-weight: bold;">Ai được mượn chìa khóa? → Chỉ EventBridge Scheduler từ đúng account và schedule group</span>
+
+  <span style="font-weight: bold; font-size: 20px;"> ★ Inline Permission Policy => Dùng để cấp quyền thực tế cho role::</span>
+  <span style="background: #FFF6DC; padding: 8px; font-weight: bold;">Chìa khóa mở được cửa nào? → Chỉ bật EC2 cụ thể và Chỉ gửi lỗi vào DLQ cụ thể</span>
+</div>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+<p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Cách nhớ ngắn gọn</p>
+<ul>
+  <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Trust Policy:</b> Ai được làm?</li>
+  <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Permission Policy:</b> Được làm gì?</li>
+</ul>
+</div>
+
 1. Mở role vừa tạo.
 2. **Add permissions → Create inline policy → JSON**.
 3. Dán policy sau khi thay `INSTANCE_ARN` và `DLQ_ARN`:
