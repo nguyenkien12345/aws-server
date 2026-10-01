@@ -381,7 +381,7 @@ Tài liệu: [Managing costs with AWS Budgets](https://docs.aws.amazon.com/cost-
   <ul>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
       <span><b style="color: red; background: #A5D6A7">Service or use case</b>: Chọn dịch vụ sẽ sử dụng role, chẳng hạn EC2, Lambda hoặc EventBridge Scheduler. Sau khi chọn dịch vụ, AWS có thể hiện thêm các use case cụ thể. AWS dùng lựa chọn này để tạo trust policy và có thể đề xuất các permission policy phù hợp</span><br/>
-      <span><b style="color: red;">Sau khi chọn dịch vụ, AWS có thể hiện thêm các use case cụ thể. AWS dùng lựa chọn này để tạo trust policy và có thể đề xuất các permission policy phù hợp</b></span><br/>
+      <span><b style="color: red;">Trong bài toán Scheduler bật/tắt EC2, bên sử dụng role là Scheduler, dù tài nguyên được thao tác là EC2. Vì vậy, nếu tạo execution role cho Scheduler thì đừng chọn use case EC2</b></span><br/>
     </li>
   </ul>
 </div>
