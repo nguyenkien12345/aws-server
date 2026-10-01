@@ -2061,8 +2061,7 @@ Lặp lại quy trình ở Bước 15 với:
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Permissions</p>
   <ul>
     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
-      <span><b style="color: red; background: #A5D6A7">Encryption mặc định :</b> AWS đã mã hóa dữ liệu lưu trữ bằng khóa AWS sở hữu</span><br/>
-      <span><b style="color: red; background: #A5D6A7">Create new role for this schedule :</b> Nhờ AWS tạo execution role mới</span>
+      <span><b style="color: red; background: #A5D6A7">Create new role for this schedule :</b> Nhờ AWS tạo execution role mới</span><br/>
       <span><b style="color: red; background: #A5D6A7">Use existing role :</b> Chọn role đã chuẩn bị để Scheduler sử dụng khi gọi API</span>
     </li>
   </ul>
