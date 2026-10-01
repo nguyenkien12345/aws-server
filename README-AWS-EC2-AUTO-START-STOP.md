@@ -21,11 +21,11 @@ Tài liệu giả định:
 
 - Đây là môi trường **test**, không phải production.
 - Bạn triển khai một EC2 độc lập, không thuộc Auto Scaling Group.
-- Region được chọn là **Asia Pacific (Singapore) — `ap-southeast-1`**.
+- Region được chọn là **Asia Pacific (Mumbai) — `ap-south-1`**.
 - Hệ điều hành là **Amazon Linux 2023**.
 - Lịch chạy cả thứ Bảy và Chủ nhật.
 
-Nếu dùng Region khác, phải thay `ap-southeast-1` trong toàn bộ ARN và chọn đúng Region trên AWS Console.
+Nếu dùng Region khác, phải thay `ap-south-1` trong toàn bộ ARN và chọn đúng Region trên AWS Console.
 
 ## 2. Kiến trúc sau khi hoàn thành
 
@@ -124,7 +124,7 @@ Tài liệu: [Getting started with IAM Identity Center](https://docs.aws.amazon.
 ## 6. Bước 1 — Chọn Region cố định
 
 1. Trên thanh trên cùng AWS Console, mở Region selector.
-2. Chọn **Asia Pacific (Singapore) — `ap-southeast-1`**.
+2. Chọn **Asia Pacific (Mumbai) — `ap-south-1`**.
 3. Giữ nguyên Region này trong EC2, SQS, EventBridge Scheduler và CloudWatch.
 
 **Kỹ thuật đang thực hiện:** phần lớn tài nguyên AWS thuộc một Region. EC2 ở Singapore không xuất hiện trong danh sách EC2 của Tokyo. Scheduler và target nên cùng Region để cấu hình, IAM ARN và vận hành dễ kiểm soát.
