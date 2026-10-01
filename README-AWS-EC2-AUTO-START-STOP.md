@@ -2037,7 +2037,7 @@ Lặp lại quy trình ở Bước 15 với:
 <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Create schedule là tạo một “lịch hẹn”: đến giờ, Schedules dùng IAM role để gọi thao tác AWS bạn chọn, ví dụ bật hoặc tắt EC2</p>
 
 <p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
-  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 1: Select trusted entity</b>
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 1: Specify schedule detail</b>
 </p>
 <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Schedule pattern</p>
