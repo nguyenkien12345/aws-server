@@ -355,6 +355,75 @@ Tài liệu: [Managing costs with AWS Budgets](https://docs.aws.amazon.com/cost-
 
 ## 8. Bước 3 — Tạo IAM role cho EC2 dùng Session Manager
 
+<p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 1: Select trusted entity</b>
+</p>
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+  Trusted entity type (Ai được sử dụng role?)
+  </p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7">AWS service</b>: Cho một dịch vụ AWS sử dụng role để thao tác với tài nguyên của bạn. VD: EC2 đọc file S3; Lambda ghi dữ liệu; Scheduler bật/tắt EC2</span><br/>
+      <span><b style="color: red; background: #A5D6A7">AWS account</b>: Thiết lập tin cậy với tài khoản AWS của bạn hoặc tài khoản AWS khác. Người dùng/role phù hợp trong tài khoản đó có thể sử dụng role khi đáp ứng đủ quyền. VD: Tài khoản của đội vận hành được phép truy cập tài nguyên trong tài khoản dự án</span><br/>
+      <span><b style="color: red; background: #A5D6A7">Web identity</b>: Cho danh tính được xác thực qua nhà cung cấp OIDC, chẳng hạn Cognito hoặc GitHub Actions, sử dụng role. VD: GitHub Actions lấy quyền AWS tạm thời để deploy, không cần lưu access key dài hạn</span><br/>
+      <span><b style="color: red; background: #A5D6A7">SAML 2.0 federation</b>: Cho người dùng đăng nhập qua hệ thống danh tính doanh nghiệp hỗ trợ SAML sử dụng role. VD: Nhân viên đăng nhập bằng tài khoản công ty qua Microsoft Entra ID hoặc AD FS để truy cập AWS</span><br/>
+      <span><b style="color: red; background: #A5D6A7">Custom trust policy</b>: Bạn tự viết JSON xác định bên được tin cậy và các điều kiện được phép sử dụng role. VD: Chỉ cho Scheduler thuộc đúng tài khoản và đúng schedule group sử dụng role</span><br/>
+      <span><b style="color: red;">Các lựa chọn này thiết lập trust policy của role. Custom trust policy cũng có thể cho phép dịch vụ AWS sử dụng role, nhưng bạn tự kiểm soát nội dung JSON</b></span><br/>
+    </li>
+  </ul>
+</div>
+
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+  Use case - Role được dùng cho dịch vụ nào? (Phần này xuất hiện vì bạn đang chọn AWS service)
+  </p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7">Service or use case</b>: Chọn dịch vụ sẽ sử dụng role, chẳng hạn EC2, Lambda hoặc EventBridge Scheduler. Sau khi chọn dịch vụ, AWS có thể hiện thêm các use case cụ thể. AWS dùng lựa chọn này để tạo trust policy và có thể đề xuất các permission policy phù hợp</span><br/>
+      <span><b style="color: red;">Sau khi chọn dịch vụ, AWS có thể hiện thêm các use case cụ thể. AWS dùng lựa chọn này để tạo trust policy và có thể đề xuất các permission policy phù hợp</b></span><br/>
+    </li>
+  </ul>
+</div>
+
+<p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 2: Add permissions</b>
+</p>
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+  Add permissions
+  </p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Use existing policy</b>: Gắn một managed policy đã có sẵn vào role. Policy tồn tại độc lập và có thể dùng chung cho nhiều role. Dùng khi đã có policy phù hợp do AWS hoặc bạn tạo trước đó
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Create inline policy</b>: Tạo bộ quyền mới, gắn trực tiếp vào riêng role này. Khi xóa role, inline policy cũng bị xóa. Dùng khi muốn viết quyền riêng cho role, ví dụ chỉ bật một EC2 cụ thể
+    </li>
+     <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Managed policy gồm AWS managed do AWS tạo và cập nhật, hoặc Customer managed do bạn/tổ chức tạo và quản lý. Inline policy do bạn quản lý và thuộc riêng một identity.</b></li>
+  </ul>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+    Với role bật/tắt EC2 của bạn: chọn Create inline policy, rồi nhập permission policy đã chuẩn bị. Ví dụ:
+  </p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Role bật máy: ec2:StartInstances</b> trên ARN của đúng instance</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Role tắt máy: ec2:StopInstances</b> trên ARN của đúng instance</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Nếu có DLQ: thêm sqs:SendMessage trên ARN của đúng queue</li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+    Không cần chọn AdministratorAccess hoặc AmazonEC2FullAccess cho công việc này vì chúng cấp quyền rộng hơn nhu cầu
+  </p>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">
+    Set permissions boundary - optional (đặt giới hạn tối đa cho quyền được cấp qua permission policy)
+  </p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Create role without a permissions boundary</b> Không thêm giới hạn boundary riêng; quyền vẫn chịu các policy khác áp dụng</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red;">Use a permissions boundary to control the maximum role permissions</b> Chọn managed policy làm giới hạn tối đa cho role</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">Ví dụ: permission policy cho phép bật và tắt EC2, nhưng boundary chỉ cho phép bật → role không được tắt. Boundary không tự cấp quyền. Với tài khoản test của bạn, có thể để không dùng boundary; nếu tài khoản công ty yêu cầu boundary thì dùng policy được quy định</li>
+  </ul>
+
+</div>
+
 1. Mở [IAM Console](https://console.aws.amazon.com/iam/).
 2. Chọn **Roles** → **Create role**.
 3. Trusted entity type: **AWS service**.
@@ -1968,7 +2037,7 @@ Lặp lại quy trình ở Bước 15 với:
 <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Create schedule là tạo một “lịch hẹn”: đến giờ, Schedules dùng IAM role để gọi thao tác AWS bạn chọn, ví dụ bật hoặc tắt EC2</p>
 
 <p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
-  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 1: Specify schedule detail</b>
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 1: Select trusted entity</b>
 </p>
 <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
   <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Schedule pattern</p>
