@@ -1980,7 +1980,7 @@ Lặp lại quy trình ở Bước 15 với:
       <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Flexible time window</b></span><br/>
       <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • Off</b> Gọi thao tác trong phút đã hẹn</span><br/>
       <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • 15 minutes</b> Cho phép gọi trong vòng 15 phút sau giờ hẹn. Ví dụ lịch 07:00 có thể chạy khoảng 07:00–07:15</span><br/>
-      <span><b style="color: red;">+ Lưu ý: Với lịch bật/tắt EC2, chọn Flexible time window = Off. Tuy vậy, Scheduler có độ chính xác 60 giây: lịch 07:00 có thể gọi API trong khoảng 07:00:00–07:00:59; EC2 còn cần thời gian khởi động. EventBridge Scheduler</b></span><br/>
+      <span><b style="color: red;">+ Lưu ý: Với lịch bật/tắt EC2, chọn Flexible time window = Off. Tuy vậy, Scheduler có độ chính xác 60 giây: lịch 07:00 có thể gọi API trong khoảng 07:00:00–07:00:59; EC2 còn cần thời gian khởi động</b></span><br/>
       <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Timeframe</b></span><br/>
       <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • Start date and time - optional</b> Mốc bắt đầu cho phép lịch lặp hoạt động. Với cron, vẫn đợi lần chạy khớp cron tiếp theo</span><br/>
       <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • End date and time - optional</b> Mốc kết thúc lịch lặp. Để trống nếu muốn chạy lâu dài</span><br/>
