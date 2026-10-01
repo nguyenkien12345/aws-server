@@ -1894,11 +1894,11 @@ Thay toàn bộ giá trị ví dụ trong các policy dưới đây. JSON không
 </div>
 
 <div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-<p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Cách nhớ ngắn gọn</p>
-<ul>
-  <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Trust Policy:</b> Ai được làm?</li>
-  <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Permission Policy:</b> Được làm gì?</li>
-</ul>
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Cách nhớ ngắn gọn</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Trust Policy:</b> Ai được làm?</li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;"><b style="color: red; background: #A5D6A7"> • Permission Policy:</b> Được làm gì?</li>
+  </ul>
 </div>
 
 1. Mở role vừa tạo.
@@ -1964,6 +1964,109 @@ Lặp lại quy trình ở Bước 15 với:
 **Kỹ thuật đang thực hiện:** tách role Start và Stop giúp mỗi lịch có đúng một lifecycle permission. Đây là least privilege rõ ràng và giúp audit dễ hơn.
 
 ## 22. Bước 17 — Tạo lịch bật EC2 lúc 07:00
+
+<p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Create schedule là tạo một “lịch hẹn”: đến giờ, Schedules dùng IAM role để gọi thao tác AWS bạn chọn, ví dụ bật hoặc tắt EC2</p>
+
+<p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 1: Specify schedule detail</b>
+</p>
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Schedule pattern</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7"> One-time schedule:</b> Chạy một lần vào ngày, giờ cụ thể. Ví dụ tắt EC2 tối nay</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Date and time:</b> Ngày, giờ chạy</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Time zone:</b> Múi giờ để hiểu giờ bạn nhập. Chọn Asia/Ho_Chi_Minh cho giờ Việt Nam</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Flexible time window</b></span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • Off</b> Gọi thao tác trong phút đã hẹn</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • 15 minutes</b> Cho phép gọi trong vòng 15 phút sau giờ hẹn. Ví dụ lịch 07:00 có thể chạy khoảng 07:00–07:15</span><br/>
+      <span><b style="color: red;">+ Lưu ý: Với lịch bật/tắt EC2, chọn Flexible time window = Off. Tuy vậy, Scheduler có độ chính xác 60 giây: lịch 07:00 có thể gọi API trong khoảng 07:00:00–07:00:59; EC2 còn cần thời gian khởi động. EventBridge Scheduler</b></span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Timeframe</b></span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • Start date and time - optional</b> Mốc bắt đầu cho phép lịch lặp hoạt động. Với cron, vẫn đợi lần chạy khớp cron tiếp theo</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • End date and time - optional</b> Mốc kết thúc lịch lặp. Để trống nếu muốn chạy lâu dài</span><br/>
+    </li>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+       <span><b style="color: red; background: #A5D6A7"> Recurring schedule:</b> Chạy lặp lại, ví dụ bật EC2 mỗi ngày</span><br/>
+       <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> Schedule type:</b></span><br/>
+       <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Cron-based schedule</b>  Chọn giờ theo lịch: “07:00 hằng ngày”, “22:00 thứ Hai đến thứ Sáu”</span><br/>
+       <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Rate-based schedule</b> Chạy sau mỗi khoảng thời gian: “mỗi 15 phút”, “mỗi 2 giờ”</span><br/>
+       <span style="margin-left: 24px;"><b style="color: red; background: #A5D6A7"> • Cron expression</b></span><br/>
+       <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Minutes: </b>0</span><br/>
+       <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Hours: </b>7</span><br/>
+       <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Day of month: </b>* (Mọi ngày trong tháng)</span><br/>
+       <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Month: </b>* (Mọi tháng)</span><br/>
+       <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Day of the week: </b>? (Không đặt điều kiện theo thứ)</span><br/>
+       <span style="margin-left: 48px;"><b style="color: red; background: #A5D6A7"> • Year: </b>* (Mọi năm)</span><br/>
+    </li>
+  </ul>
+</div>
+
+<p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 2: Select target</b>
+</p>
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Target API</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7"> Templated targets:</b> Các thao tác phổ biến được AWS chuẩn bị sẵn giao diện nhập</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • All APIs:</b> (Chúng ta sẽ chọn thằng này) Chọn dịch vụ và API cụ thể, ví dụ EC2 → StartInstances hoặc StopInstances</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 48px;"> • Input / Payload</b> Dữ liệu gửi cho API, chẳng hạn ID của EC2 cần bật/tắt. Với EC2, chọn API phù hợp và nhập: { "InstanceIds": ["i-0123456789abcdef0"] }</span><br/>
+    </li>
+  </ul>
+</div>
+
+<p style="background: yellow;  padding-left: 10px; padding-right: 10px;">
+  <b style="color: red; font-size: 20px; text-transform: uppercase;">Step 3: Settings</b>
+</p>
+<div style="background: #e1e2b6; padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Schedule state</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7">Enable schedule :</b> Bật: lịch được thực thi. Tắt: lưu cấu hình nhưng chưa chạy</span>
+    </li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Action after schedule completion</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7">Action after schedule completion</b></span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • NONE:</b> Giữ cấu hình lịch sau khi hoàn tất</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • DELETE:</b> Tự xóa lịch sau lần chạy cuối; hữu ích cho lịch một lần. Không xóa EC2</span><br/>
+    </li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Retry policy and dead-letter queue (DLQ)</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7;">Retry policy:</b> Nếu gọi API thất bại, Scheduler thử lại</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Maximum age of event:</b> Lệnh còn được phép thử lại trong bao lâu kể từ giờ hẹn; tối đa 24 giờ</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Retry attempts - optional:</b> Số lần thử lại tối đa; tối đa 185 lần</span><br/>
+      <span><b style="color: red;">+ Retry dừng khi hết thời gian hoặc hết số lần thử, tùy điều kiện nào đến trước. Với máy test, mình đề xuất 1 giờ + 3 lần thử lại, để hạn chế thực thi lệnh đã quá trễ</b></span><br/>
+      <span><b style="color: red; background: #A5D6A7">Dead-letter queue (DLQ)</b> Lưu lần gọi thất bại</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • None</b> Không lưu lỗi vào DLQ</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Select an Amazon SQS queue in my AWS account as a DLQ</b> Lưu thông tin thất bại vào queue trong tài khoản của bạn</span><br/>
+      <span><b style="color: red; background: #A5D6A7; margin-left: 12px;"> • Specify an Amazon SQS queue in other AWS accounts as a DLQ</b> Lưu vào queue của tài khoản khác, cần cấu hình quyền tương ứng</span><br/>
+      <span><b style="color: red;">Hình dung DLQ là “hộp thư chứa lệnh thất bại” để bạn kiểm tra nguyên nhân. Nó không tự sửa lỗi hay tự chạy lại lệnh. Chọn queue Standard; Scheduler không hỗ trợ FIFO làm DLQ. Role cần quyền sqs:SendMessage vào queue đó</b></span><br/>
+    </li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Encryption</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7">Encryption mặc định :</b> AWS đã mã hóa dữ liệu lưu trữ bằng khóa AWS sở hữu</span><br/>
+      <span><b style="color: red; background: #A5D6A7">Customize encryption settings (advanced) :</b> Dùng khóa KMS do bạn quản lý để mã hóa target input; cần quản lý thêm quyền khóa</span>
+    </li>
+  </ul>
+
+  <p style="display: inline-block; color: #F2842F; background-color: #FFF9D8; padding: 4px 8px; border-radius: 24px; font-weight: bold;">Permissions</p>
+  <ul>
+    <li style="border-left: 4px solid #757d6f; background: #eeead7; padding: 4px 8px;">
+      <span><b style="color: red; background: #A5D6A7">Encryption mặc định :</b> AWS đã mã hóa dữ liệu lưu trữ bằng khóa AWS sở hữu</span><br/>
+      <span><b style="color: red; background: #A5D6A7">Create new role for this schedule :</b> Nhờ AWS tạo execution role mới</span>
+      <span><b style="color: red; background: #A5D6A7">Use existing role :</b> Chọn role đã chuẩn bị để Scheduler sử dụng khi gọi API</span>
+    </li>
+  </ul>
+</div>
 
 1. Mở [EventBridge Scheduler Console](https://console.aws.amazon.com/scheduler/home).
 2. Chọn **Create schedule**.
